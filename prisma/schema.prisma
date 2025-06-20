@@ -1,0 +1,183 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  // output   = "../lib/generated/prisma"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+  // relationMode = "prisma"
+}
+
+enum Role {
+  ADMIN
+  MODERATOR
+  USER
+}
+
+model User {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  username     String
+  profileImage String?
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+  role         Role     @default(USER)
+
+  userRiskAssessments UserRiskAssessment[]
+  wishlists           Wishlist[]
+
+  UserPortfolio UserPortfolio[]
+}
+
+model RiskAssessmentResult {
+  id       Int @id @default(autoincrement())
+  minScore Int
+  maxScore Int
+
+  userRiskLevel     UserRiskAssessment[]
+  riskLevelMapping  RiskLevelMapping[]
+  recommendPort     RecommendPort[]
+  recommendCriteria RecommendCriteria[]
+}
+
+model RecommendCriteria {
+  id              String @id @default(uuid())
+  userRiskLevelId Int @map("user_risk_level_id")
+  fundAssetType   String @map("fund_asset_type")
+  percentInvest   String @map("percent_invest")
+
+  riskAssessmentResult RiskAssessmentResult @relation(fields: [userRiskLevelId], references: [id], onDelete: Cascade)
+}
+
+model UserRiskAssessment {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now()) @map("created_at")
+
+  userId               String               @map("user_id")
+  users                User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userRiskLevelId      Int               @map("user_risk_level_id")
+  riskAssessmentResult RiskAssessmentResult @relation(fields: [userRiskLevelId], references: [id], onDelete: Cascade)
+}
+
+// ผู้ลงทุนระดับความเสี่ยง 6 สามารถลงในกองไหนได้บ้าง
+model RiskLevelMapping {
+  id                   Int               @id @default(autoincrement())
+  userRiskLevelId      Int               @map("user_risk_level_id")
+  riskAssessmentResult RiskAssessmentResult @relation(fields: [userRiskLevelId], references: [id], onDelete: Cascade)
+  fundRiskLevelName    String               @map("fund_risk_level_name") // array ["ตราสารทุน", "ตราสารหนี้"]
+}
+
+model RecommendPort {
+  id             String @id @default(uuid())
+  investmentType String @map("investment_type")
+  weight         Float
+
+  userRiskLevelId      Int               @map("user_risk_level_id")
+  riskAssessmentResult RiskAssessmentResult @relation(fields: [userRiskLevelId], references: [id], onDelete: Cascade)
+}
+
+model RiskAssessmentQuestion {
+  id       String @id @default(uuid())
+  question String
+  option1  String
+  option2  String
+  option3  String
+  option4  String
+}
+
+model Funds {
+  id                Int  @id @default(autoincrement())
+  fundCompareGroup  String  @map("fund_compare_group")
+  investCountryFlag String  @map("invest_country_flag")
+  fundPolicy        String? @map("fund_policy")
+  urlFactsheet      String  @map("url_factsheet")
+  projNameTh        String  @map("proj_name_th")
+  projAbbrName      String  @map("proj_abbr_name")
+
+  companyId       Int           @map("company_id")
+  companies       Company       @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  fundRiskLevelId Int        @map("fund_risk_level_id")
+  FundRiskLevel   FundRiskLevel @relation(fields: [fundRiskLevelId], references: [id], onDelete: Cascade)
+
+  ClassAbbr ClassAbbr[]
+}
+
+model Company {
+  id          Int    @id @default(autoincrement())
+  companyName String @map("company_name")
+
+  Funds Funds[]
+}
+
+model FeeDetail {
+  id          String  @id @default(uuid())
+  feeType     String  @map("fee_type")
+  rate        Float
+  rateUnit    String? @map("rate_unit") @db.VarChar(2000)
+  actualValue Float?  @map("actual_value")
+
+  classAbbrId Int    @map("class_abbr_id")
+  classAbbrs  ClassAbbr @relation(fields: [classAbbrId], references: [id], onDelete: Cascade)
+}
+
+model FundPerformanceRisk {
+  id                String @id @default(uuid())
+  performanceType   String @map("performance_type")
+  performancePeriod String @map("performance_period")
+  performanceValue  Float? @map("performance_value")
+
+  classAbbrId Int    @map("class_abbr_id")
+  classAbbrs  ClassAbbr @relation(fields: [classAbbrId], references: [id], onDelete: Cascade)
+}
+
+model FundRiskLevel {
+  id                Int  @id @default(autoincrement())
+  fundRiskLevelName String  @map("fund_risk_level_name")
+  fundInvestment    String  @map("fund_investment")
+  Funds             Funds[]
+}
+
+model ClassAbbr {
+  id             Int @id @default(autoincrement())
+  classAbbrName  String @map("class_abbr_name")
+  dividendPolicy String @map("dividend_policy")
+
+  fundId Int @map("fund_id")
+  funds  Funds  @relation(fields: [fundId], references: [id], onDelete: Cascade)
+
+  FeeDetail           FeeDetail[]
+  fundPerformanceRisk FundPerformanceRisk[]
+  Wishlist            Wishlist[]
+
+  UserPortfolio UserPortfolio[]
+}
+
+model Wishlist {
+  id             String   @id @default(uuid())
+  interestRating Int
+  note           String
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  userId      String    @map("user_id")
+  classAbbrId Int    @map("class_abbr_id")
+  users       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  classAbbr   ClassAbbr @relation(fields: [classAbbrId], references: [id], onDelete: Cascade)
+}
+
+model UserPortfolio {
+  id          String @id @default(uuid())
+  userId      String
+  classAbbrId Int
+  amount      Float
+
+  users      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  classAbbrs ClassAbbr @relation(fields: [classAbbrId], references: [id], onDelete: Cascade)
+}

@@ -8,12 +8,17 @@
     "start": "next start",
     "lint": "next lint"
   },
+  "prisma": {
+    "seed": "npx ts-node -r tsconfig-paths/register --project tsconfig.seed.json prisma/seed.ts"
+  },
   "dependencies": {
     "@clerk/nextjs": "^6.22.0",
     "@clerk/themes": "^2.2.50",
+    "@prisma/client": "^6.10.1",
     "@radix-ui/react-slot": "^1.2.3",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "convert-csv-to-json": "^3.5.0",
     "lucide-react": "^0.518.0",
     "next": "15.3.4",
     "react": "^19.0.0",
@@ -28,7 +33,10 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "15.3.4",
+    "prisma": "^6.10.1",
     "tailwindcss": "^4",
+    "ts-node": "^10.9.2",
+    "tsconfig-paths": "^4.2.0",
     "tw-animate-css": "^1.3.4",
     "typescript": "^5"
   }
