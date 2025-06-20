@@ -49,6 +49,7 @@ body,
   --radius-xl: calc(var(--radius) + 4px);
   --animate-moveInCircle: moveInCircle 30s ease infinite;
   --animate-moveVertical: moveVertical 30s ease infinite;
+  --animate-gradient: gradient 8s linear infinite;
 }
 
 :root {
@@ -129,7 +130,6 @@ body,
   }
 }
 
-
 @keyframes moveInCircle {
   0% {
     transform: rotate(0deg);
@@ -154,3 +154,14 @@ body,
   }
 }
 
+@keyframes gradient {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
