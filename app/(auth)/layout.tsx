@@ -6,7 +6,7 @@ export default function AuthLayout({
   return (
     <div className="h-full overflow-hidden">
       <div className="h-full flex items-center justify-center">{children}</div>
-      <div className="h-full w-full position absolute overflow-hidden top-0 left-0 bg-radial-[at_50%_75%] from-indigo-950  to-slate-950 to-90% -z-50">
+      <div className="h-full w-full position absolute overflow-hidden top-0 left-0 bg-radial-[at_50%_75%] from-indigo-950 to-slate-950 to-90% -z-50">
         <svg xmlns="http://www.w3.org/2000/svg">
           <defs>
             <filter id="goo">

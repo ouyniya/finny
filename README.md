@@ -1,3 +1,15 @@
+
+
+## Credits
+
+This project was inspired by various open-source UI works from the community.  
+
+Many thanks to everyone who shared their creative and inspiring work — it was a great learning resource and inspiration for this project.
+
+- 3D hover effect based on [Silas's CodePen](https://codepen.io/silas/pen/rNYqZoz)  
+- Morphing Gradients Animated Background [WeCoded](https://www.youtube.com/watch?v=Ml-B-W91gtw&t=6s)  
+- Gradient Text [ReactBits](https://www.reactbits.dev/text-animations/gradient-text)  
+
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
 ## Getting Started
