@@ -1,8 +1,8 @@
 const Footer = () => {
   return (
     <>
-      <footer className="absolute bottom-0 w-full bg-primary-foreground">
-        <div className="flex gap-18 py-18 px-4 justify-center items-center flex-wrap max-w-5xl mx-auto">
+      <footer className="w-full bg-primary-foreground">
+        <div className="flex gap-18 py-18 px-4 justify-around items-center flex-wrap max-w-5xl mx-auto">
           <div className="flex flex-col gap-8">
             <h3 className="font-semibold text-lg">Text</h3>
           </div>

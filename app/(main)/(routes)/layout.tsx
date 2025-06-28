@@ -8,7 +8,9 @@ const MainLayout = ({ children }: { children: React.ReactNode }) => {
       <Bg />
       <Navbar />
       {children}
-      <Footer />
+      <div className="relative flex">
+        <Footer />
+      </div>
     </>
   );
 };
