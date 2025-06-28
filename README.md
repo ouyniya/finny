@@ -1,6 +1,14 @@
 
+## Tech Stacks
+
+- [motion-primitives](https://github.com/ibelick/motion-primitives)
+- [background-snippets](https://github.com/ibelick/background-snippets)
+- [playground Ai](https://playground.com/)
+
 
 ## Credits
+
+Special thanks to Google Font to SVG Path for providing an easy tool to convert fonts to SVG paths. It made this project much easier! link: https://danmarshall.github.io/google-font-to-svg-path/
 
 This project was inspired by various open-source UI works from the community.  
 

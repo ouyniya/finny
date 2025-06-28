@@ -1,0 +1,43 @@
+import { GlowEffectButton } from "@/components/button/GlowButton";
+import { Blocks, ChevronRight } from "lucide-react";
+import { TextLoopBasic } from "@/components/text/TextLoopBasic";
+import GradientText from "@/components/text/GradientText";
+
+const Hero = () => {
+  return (
+    <main>
+      <div className="max-w-5xl w-screen mx-auto flex flex-col gap-12 justify-center mt-24">
+        <div className="flex flex-col gap-5">
+          <a href="#" className="hover:cursor-pointer">
+            <div className="flex gap-2 justify-center items-center max-w-max rounded-md mx-auto px-3 py-1 bg-primary-foreground border border-primary/10">
+              <Blocks size={16} fill="blue" />
+              <TextLoopBasic />
+              <ChevronRight size={16} />
+            </div>
+          </a>
+
+          <div className="flex flex-col gap-2 text-center">
+            <GradientText
+              colors={["#40ffaa", "#4079ff", "#40ffaa", "#4079ff", "#40ffaa"]}
+              animationSpeed={3}
+              showBorder={false}
+              className="font-light text-5xl leading-15"
+            >
+              เรื่องเงินไม่ต้องคิดเยอะ…ให้เราคิดแทน
+            </GradientText>
+            <p className="text-center text-xl opacity-60">
+              ขี้เกียจ วุ่นวาย? งั้นมาใช้เครื่องมือสนุกๆ ช่วยจัดการเงินแบบง่ายๆ กันเถอะ
+            </p>
+          </div>
+        </div>
+
+        <div className="flex justify-center w-full">
+          <a href="/tools">
+            <GlowEffectButton>ลองเล่นเครื่องมือฟรี</GlowEffectButton>
+          </a>
+        </div>
+      </div>
+    </main>
+  );
+};
+export default Hero;
