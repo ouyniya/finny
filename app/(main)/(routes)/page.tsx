@@ -1,123 +1,24 @@
+import Faq from "@/components/main/Faq";
+import Header from "@/components/main/Header";
 import Hero from "@/components/main/Hero";
-import { InView } from '@/components/ui/in-view';
+import Tester from "@/components/main/Tester";
 
 export default async function Home() {
   return (
     <>
-      <Hero />
+      <div className="flex flex-col gap-5 md:gap-48 w-full max-w-5xl mx-auto px-4 xl:px-0 mb-32">
+        <Hero />
 
-        <InView
-          variants={{
-            hidden: {
-              opacity: 0,
-              y: 30,
-              scale: 0.95,
-              filter: 'blur(4px)',
-            },
-            visible: {
-              opacity: 1,
-              y: 0,
-              scale: 1,
-              filter: 'blur(0px)',
-            },
-          }}
-          transition={{ duration: 0.3, ease: 'easeInOut' }}
-          viewOptions={{ margin: '0px 0px -350px 0px' }}
-        >
-          <div className='max-w-96 bg-primary-foreground p-4'>
-            <p>
-              <strong className='font-medium text-zinc-900'>Athletics.</strong>{' '}
-              Watch running, jumping, and throwing events. Athletes compete in
-              fuga odit earum tempore accusantium blanditiis eius labore sequi pariatur quod libero 
-              Watch running, jumping, and throwing events. Athletes compete in
-              fuga odit earum tempore accusantium blanditiis eius labore sequi pariatur quod libero 
-              Watch running, jumping, and throwing events. Athletes compete in
-              fuga odit earum tempore accusantium blanditiis eius labore sequi pariatur quod libero 
-              Watch running, jumping, and throwing events. Athletes compete in
-              fuga odit earum tempore accusantium blanditiis eius labore sequi pariatur quod libero 
-              Watch running, jumping, and throwing events. Athletes compete in
-              fuga odit earum tempore accusantium blanditiis eius labore sequi pariatur quod libero 
-              Watch running, jumping, and throwing events. Athletes compete in
-              fuga odit earum tempore accusantium blanditiis eius labore sequi pariatur quod libero 
-              Watch running, jumping, and throwing events. Athletes compete in
-              fuga odit earum tempore accusantium blanditiis eius labore sequi pariatur quod libero 
-              Watch running, jumping, and throwing events. Athletes compete in
-              fuga odit earum tempore accusantium blanditiis eius labore sequi pariatur quod libero 
-              Watch running, jumping, and throwing events. Athletes compete in
-              fuga odit earum tempore accusantium blanditiis eius labore sequi pariatur quod libero 
-              Watch running, jumping, and throwing events. Athletes compete in
-              fuga odit earum tempore accusantium blanditiis eius labore sequi pariatur quod libero 
-              Watch running, jumping, and throwing events. Athletes compete in
-              fuga odit earum tempore accusantium blanditiis eius labore sequi pariatur quod libero 
-              Watch running, jumping, and throwing events. Athletes compete in
-              fuga odit earum tempore accusantium blanditiis eius labore sequi pariatur quod libero 
-              Watch running, jumping, and throwing events. Athletes compete in
-              fuga odit earum tempore accusantium blanditiis eius labore sequi pariatur quod libero 
-              Watch running, jumping, and throwing events. Athletes compete in
-              fuga odit earum tempore accusantium blanditiis eius labore sequi pariatur quod libero 
-              Watch running, jumping, and throwing events. Athletes compete in
-              fuga odit earum tempore accusantium blanditiis eius labore sequi pariatur quod libero 
-              Watch running, jumping, and throwing events. Athletes compete in
-              fuga odit earum tempore accusantium blanditiis eius labore sequi pariatur quod libero 
-              Watch running, jumping, and throwing events. Athletes compete in
-              fuga odit earum tempore accusantium blanditiis eius labore sequi pariatur quod libero 
-              Watch running, jumping, and throwing events. Athletes compete in
-              fuga odit earum tempore accusantium blanditiis eius labore sequi pariatur quod libero 
-              Watch running, jumping, and throwing events. Athletes compete in
-              fuga odit earum tempore accusantium blanditiis eius labore sequi pariatur quod libero 
-              Watch running, jumping, and throwing events. Athletes compete in
-              fuga odit earum tempore accusantium blanditiis eius labore sequi pariatur quod libero 
-            </p>
-          </div>
-        </InView>
-     
-      
-        <InView
-          variants={{
-            hidden: {
-              opacity: 0,
-              x: 100,
-            },
-            visible: {
-              opacity: 1,
-              x: 0,
-            },
-          }}
-          transition={{ duration: 0.3, ease: 'easeInOut' }}
-          viewOptions={{ margin: '0px 0px -350px 0px' }}
-        >
-          <div className='max-w-96 bg-zinc-900 p-4'>
-            <p className='text-zinc-400'>
-              <strong className='font-medium text-zinc-50'>Swimming.</strong>{' '}
-              See swimmers race in water. They use different styles to swim fast
-              and win medals.
-            </p>
-          </div>
-        </InView>
+        <Tester />
 
-      
-        <InView
-          variants={{
-            hidden: {
-              opacity: 0,
-              scale: 1.5,
-            },
-            visible: {
-              opacity: 1,
-              scale: 1,
-            },
-          }}
-          transition={{ duration: 0.3, ease: 'easeInOut' }}
-          viewOptions={{ margin: '0px 0px -350px 0px' }}
-        >
-          <div className='max-w-96 bg-zinc-100 p-4'>
-            <p className='text-zinc-600'>
-              <strong className='font-medium'>Gymnastics.</strong> Gymnasts
-              perform amazing flips and jumps. They show strength and balance in
-              their routines.
-            </p>
-          </div>
-        </InView>
+        <div className="flex flex-col gap-16 justify-center">
+          <Header
+            header="คำถามที่พบบ่อย"
+            content="รวบรวมคำถามที่พบบ่อย แยกตามหมวดหมู่ดังนี้"
+          />
+          <Faq />
+        </div>
+      </div>
     </>
   );
 }

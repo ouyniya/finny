@@ -9,6 +9,7 @@ import {
 } from "@clerk/nextjs";
 import Logo from "../svg/Logo";
 import Link from "next/link";
+import Loading from "@/app/loading";
 
 const Navbar = () => {
   const { isLoaded, user } = useUser();
@@ -23,7 +24,7 @@ const Navbar = () => {
             </Link>
             <div className="flex gap-10">
               {!isLoaded ? (
-                <>Loading</>
+                <><Loading /></>
               ) : user ? (
                 <>
                   <UserButton />

@@ -5,11 +5,20 @@ import Navbar from "@/components/main/Navbar";
 const MainLayout = ({ children }: { children: React.ReactNode }) => {
   return (
     <>
-      <Bg />
-      <Navbar />
-      {children}
-      <div className="relative flex">
-        <Footer />
+      <div
+        className="site min-h-[100dvh] grid"
+        style={{
+          gridTemplateRows: "auto 1fr auto",
+          gridTemplateColumns: "minmax(0, 1fr)",
+        }}
+      >
+        <Bg />
+        <Navbar />
+        {children}
+
+        <div className="relative flex">
+          <Footer />
+        </div>
       </div>
     </>
   );

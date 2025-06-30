@@ -4,6 +4,7 @@
 - [motion-primitives](https://github.com/ibelick/motion-primitives)
 - [background-snippets](https://github.com/ibelick/background-snippets)
 - [playground Ai](https://playground.com/)
+- [yahoo-finance2](https://www.npmjs.com/package/yahoo-finance2)
 
 
 ## Credits

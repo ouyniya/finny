@@ -6,8 +6,8 @@ import GradientText from "@/components/text/GradientText";
 const Hero = () => {
   return (
     <main>
-      <div className="max-w-5xl w-screen mx-auto flex flex-col gap-12 justify-center mt-24">
-        <div className="flex flex-col gap-5">
+      <div className="max-w-5xl w-full mx-auto flex flex-col gap-12 justify-center mt-24">
+        <div className="flex flex-col gap-2 lg:gap-5">
           <a href="#" className="hover:cursor-pointer">
             <div className="flex gap-2 justify-center items-center max-w-max rounded-md mx-auto px-3 py-1 bg-primary-foreground border border-primary/10">
               <Blocks size={16} fill="blue" />
@@ -16,17 +16,18 @@ const Hero = () => {
             </div>
           </a>
 
-          <div className="flex flex-col gap-2 text-center">
+          <div className="flex flex-col gap-0 md:gap-2 text-center w-full">
             <GradientText
               colors={["#40ffaa", "#4079ff", "#40ffaa", "#4079ff", "#40ffaa"]}
               animationSpeed={3}
               showBorder={false}
-              className="font-light text-5xl leading-15"
+              className="font-light text-xl md:text-4xl xl:text-5xl leading-15"
             >
               เรื่องเงินไม่ต้องคิดเยอะ…ให้เราคิดแทน
             </GradientText>
-            <p className="text-center text-xl opacity-60">
-              ขี้เกียจ วุ่นวาย? งั้นมาใช้เครื่องมือสนุกๆ ช่วยจัดการเงินแบบง่ายๆ กันเถอะ
+            <p className="text-center text-sm lg:text-base md:text-xl opacity-60">
+              ขี้เกียจ วุ่นวาย? งั้นมาใช้เครื่องมือสนุกๆ ช่วยจัดการเงินแบบง่ายๆ
+              กันเถอะ
             </p>
           </div>
         </div>
