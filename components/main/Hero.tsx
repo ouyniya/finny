@@ -23,18 +23,17 @@ const Hero = () => {
               showBorder={false}
               className="font-light text-xl md:text-4xl xl:text-5xl leading-15"
             >
-              เรื่องเงินไม่ต้องคิดเยอะ…ให้เราคิดแทน
+              เลือกกองทุนที่ใช่ ในไม่กี่คลิก!
             </GradientText>
             <p className="text-center text-sm lg:text-base md:text-xl opacity-60">
-              ขี้เกียจ วุ่นวาย? งั้นมาใช้เครื่องมือสนุกๆ ช่วยจัดการเงินแบบง่ายๆ
-              กันเถอะ
+              กองทุนไหนใช่? เราช่วยคุณคัดกรอง
             </p>
           </div>
         </div>
 
         <div className="flex justify-center w-full">
-          <a href="/tools">
-            <GlowEffectButton>ลองเล่นเครื่องมือฟรี</GlowEffectButton>
+          <a href="/know-you">
+            <GlowEffectButton>ค้นหากองทุนที่ใช่</GlowEffectButton>
           </a>
         </div>
       </div>

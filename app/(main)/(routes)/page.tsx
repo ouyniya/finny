@@ -1,3 +1,4 @@
+import { Bento } from "@/components/main/Bento";
 import Faq from "@/components/main/Faq";
 import Header from "@/components/main/Header";
 import Hero from "@/components/main/Hero";
@@ -13,6 +14,16 @@ export default async function Home() {
 
         <div className="flex flex-col gap-16 justify-center">
           <Header
+            top="Services"
+            header="บริการของเรา"
+            content=""
+          />
+          <Bento />
+        </div>
+
+        <div className="flex flex-col gap-16 justify-center">
+          <Header
+            top="FAQs"
             header="คำถามที่พบบ่อย"
             content="รวบรวมคำถามที่พบบ่อย แยกตามหมวดหมู่ดังนี้"
           />

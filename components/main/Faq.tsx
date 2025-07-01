@@ -5,7 +5,34 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import { AccordionHeader } from "@radix-ui/react-accordion";
+
+const faqs = [
+  {
+    question: "ทำไมต้องลงทุนใน Mutual fund",
+    answer:
+      "Mutual fund ช่วยกระจายความเสี่ยงในการลงทุน โดยมีผู้จัดการกองทุนบริหารให้ เหมาะสำหรับผู้ที่ต้องการลงทุนแต่ไม่มีเวลาหรือความเชี่ยวชาญในการเลือกหุ้นเอง",
+  },
+  {
+    question: "เว็บไซต์นี้ช่วยอะไรได้บ้าง?",
+    answer:
+      "เว็บไซต์นี้ช่วยให้คุณสามารถคัดกรองกองทุนตามเงื่อนไขที่ต้องการ เพิ่มกองทุนลงใน Wishlist และศึกษาข้อมูลกองทุนเพื่อการเรียนรู้ โดยไม่มีวัตถุประสงค์เพื่อการแนะนำการลงทุน",
+  },
+  {
+    question: "การเพิ่มกองทุนลงใน Wishlist มีประโยชน์อย่างไร?",
+    answer:
+      "การเพิ่มกองทุนลงใน Wishlist ช่วยให้คุณสามารถติดตามกองทุนที่สนใจ และเปรียบเทียบข้อมูลได้ง่ายขึ้นโดยไม่ต้องค้นหาใหม่ทุกครั้ง",
+  },
+  {
+    question: "ข้อมูลในเว็บไซต์นี้เชื่อถือได้หรือไม่?",
+    answer:
+      "ข้อมูลในเว็บไซต์นี้จัดทำขึ้นเพื่อการศึกษาและอ้างอิงจากแหล่งข้อมูลที่น่าเชื่อถือ อย่างไรก็ตาม โปรดตรวจสอบข้อมูลจากแหล่งข้อมูลทางการก่อนตัดสินใจลงทุน",
+  },
+  {
+    question: "เว็บไซต์นี้มีค่าใช้จ่ายหรือไม่?",
+    answer:
+      "เว็บไซต์นี้ให้บริการฟรีสำหรับการศึกษาข้อมูลเกี่ยวกับกองทุน ไม่มีค่าธรรมเนียมในการใช้งาน",
+  },
+];
 
 const Faq = () => {
   return (
@@ -35,54 +62,15 @@ const Faq = () => {
             className="w-full"
             defaultValue="item-1"
           >
-            <AccordionItem value="item-1">
-            <AccordionHeader>
-                test
-            </AccordionHeader>
-              <AccordionTrigger>Product Information</AccordionTrigger>
-              <AccordionContent className="flex flex-col gap-4 text-balance">
-                <p>
-                  Our flagship product combines cutting-edge technology with
-                  sleek design. Built with premium materials, it offers
-                  unparalleled performance and reliability.
-                </p>
-                <p>
-                  Key features include advanced processing capabilities, and an
-                  intuitive user interface designed for both beginners and
-                  experts.
-                </p>
-              </AccordionContent>
-            </AccordionItem>
-            <AccordionItem value="item-2">
-              <AccordionTrigger>Shipping Details</AccordionTrigger>
-              <AccordionContent className="flex flex-col gap-4 text-balance">
-                <p>
-                  We offer worldwide shipping through trusted courier partners.
-                  Standard delivery takes 3-5 business days, while express
-                  shipping ensures delivery within 1-2 business days.
-                </p>
-                <p>
-                  All orders are carefully packaged and fully insured. Track
-                  your shipment in real-time through our dedicated tracking
-                  portal.
-                </p>
-              </AccordionContent>
-            </AccordionItem>
-            <AccordionItem value="item-3">
-              <AccordionTrigger>Return Policy</AccordionTrigger>
-              <AccordionContent className="flex flex-col gap-4 text-balance">
-                <p>
-                  We stand behind our products with a comprehensive 30-day
-                  return policy. If you&apos;re not completely satisfied, simply
-                  return the item in its original condition.
-                </p>
-                <p>
-                  Our hassle-free return process includes free return shipping
-                  and full refunds processed within 48 hours of receiving the
-                  returned item.
-                </p>
-              </AccordionContent>
-            </AccordionItem>
+            {faqs &&
+              faqs.map((faq, index) => (
+                <AccordionItem key={index} value={`item-${index + 1}`}>
+                  <AccordionTrigger>{faq.question}</AccordionTrigger>
+                  <AccordionContent className="flex flex-col gap-4 text-balance">
+                    {faq.answer}
+                  </AccordionContent>
+                </AccordionItem>
+              ))}
           </Accordion>
         </div>
       </InView>

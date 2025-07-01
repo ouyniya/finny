@@ -14,12 +14,17 @@ const MainLayout = ({ children }: { children: React.ReactNode }) => {
       >
         <Bg />
         <Navbar />
-        {children}
+
+        <div className="flex flex-col gap-5 md:gap-16 w-full max-w-5xl mx-auto px-4 xl:px-0 mt-20 mb-32">
+          {children}
+        </div>
 
         <div className="relative flex">
           <Footer />
         </div>
       </div>
+
+      
     </>
   );
 };

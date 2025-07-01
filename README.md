@@ -5,6 +5,9 @@
 - [background-snippets](https://github.com/ibelick/background-snippets)
 - [playground Ai](https://playground.com/)
 - [yahoo-finance2](https://www.npmjs.com/package/yahoo-finance2)
+- [Avatars](https://alohe.github.io/avatars/)
+- Image by Open Peeps from https://www.openpeeps.com/ is licensed under CC0 1.0
+- [Magic UI](https://magicui.design/)
 
 
 ## Credits
