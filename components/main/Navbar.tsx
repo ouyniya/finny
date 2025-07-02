@@ -33,7 +33,7 @@ const Navbar = () => {
 
                   <SignOutButton>
                     <button className="hover:cursor-pointer hover:text-primary hover:text-shadow-[0_0px_16px_rgb(255_0_0_/_1)] hover:text-shadow-red-500 duration-300">
-                      Login
+                      Logout
                     </button>
                   </SignOutButton>
                 </>

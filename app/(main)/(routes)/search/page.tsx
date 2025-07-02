@@ -1,6 +1,6 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { redirect, useRouter } from "next/navigation";
 import React, {
   useCallback,
   useRef,
@@ -33,7 +33,6 @@ import {
 import { cn } from "@/lib/utils";
 import Image from "next/image";
 import { Globe, Trash } from "lucide-react";
-import Link from "next/link";
 
 // Types
 interface FundProps {
@@ -67,9 +66,7 @@ interface SearchInput {
   name: string;
   fundCompareGroup: string;
   company: string;
-  skip: string;
-  take: string;
-  page?: string; // Add page field
+  page: string;
 }
 
 // Loading state management
@@ -87,6 +84,11 @@ interface AppState {
   searchInput: SearchInput;
   loading: LoadingState;
   error: string;
+}
+
+// Component Props
+interface SearchPageProps {
+  searchParams: Promise<SearchInput>;
 }
 
 type AppAction =
@@ -195,9 +197,7 @@ function appReducer(state: AppState, action: AppAction): AppState {
           name: "",
           fundCompareGroup: "",
           company: "",
-          skip: "0",
-          take: "10",
-          page: "1", // Reset page to 1
+          page: "1",
         },
         results: { data: [], total: 0 },
         error: "",
@@ -280,14 +280,10 @@ function useSearchFunds(initialParams: SearchInput) {
   const handleSearchV2 = useCallback(() => {
     const params = new URLSearchParams();
     // Calculate skip based on current page
-    const currentPage = parseInt(state.searchInput.page || "1");
-    const itemsPerPage = parseInt(state.searchInput.take);
-    const calculatedSkip = ((currentPage - 1) * itemsPerPage).toString();
 
     // Update search input with calculated skip
     const searchInputWithSkip = {
       ...state.searchInput,
-      skip: calculatedSkip,
     };
 
     Object.entries(searchInputWithSkip).forEach(([key, value]) => {
@@ -297,10 +293,6 @@ function useSearchFunds(initialParams: SearchInput) {
     // Always include page in URL
     if (state.searchInput.page) {
       params.set("page", state.searchInput.page);
-    }
-
-    if (+state.searchInput.take > 10) {
-      state.searchInput.take = "10";
     }
 
     router.push(`?${params.toString()}`);
@@ -324,7 +316,6 @@ function useSearchFunds(initialParams: SearchInput) {
     const newSearchInput = {
       ...state.searchInput,
       page: "1",
-      skip: "0",
     };
     // Update the state
     updateSearchInput(newSearchInput);
@@ -335,20 +326,16 @@ function useSearchFunds(initialParams: SearchInput) {
 
   const handlePageChange = useCallback(
     (newPage: number) => {
-      const itemsPerPage = parseInt(state.searchInput.take);
-      const newSkip = ((newPage - 1) * itemsPerPage).toString();
 
       // Create the new search input object
       const newSearchInput = {
         ...state.searchInput,
         page: newPage.toString(),
-        skip: newSkip,
       };
 
       // Update the state
       updateSearchInput({
         page: newPage.toString(),
-        skip: newSkip,
       });
 
       // Immediately search with the NEW values (not waiting for state update)
@@ -401,7 +388,8 @@ function useSearchFunds(initialParams: SearchInput) {
 
 const getPaginationInfo = (searchInput: SearchInput, total: number) => {
   const currentPage = parseInt(searchInput.page || "1");
-  const itemsPerPage = parseInt(searchInput.take);
+  const ITEM_PER_PAGE = process.env.ITEM_PER_PAGE || "10"
+  const itemsPerPage = parseInt(ITEM_PER_PAGE);
   const totalPages = Math.ceil(total / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
 
@@ -437,27 +425,15 @@ const truncateText = (text: string, maxLength: number): string => {
   return text.length > maxLength ? `${text.substring(0, maxLength)}...` : text;
 };
 
-// Component Props
-interface SearchPageProps {
-  searchParams: Promise<SearchInput>;
-}
-
 // Main Component
 const SearchPage = ({ searchParams }: SearchPageProps) => {
   const resultsRef = useRef<HTMLDivElement>(null);
   const params = React.use(searchParams);
-  let takeAdjusted: string = "10";
-
-  if (params?.take && +params?.take > 10) {
-    takeAdjusted = "10";
-  }
 
   const initialParams = {
     name: params.name || "",
     fundCompareGroup: params.fundCompareGroup || "",
     company: params.company || "",
-    skip: params.skip || "0",
-    take: takeAdjusted,
     page: params.page || "1", // Add page initialization
   };
 
@@ -876,8 +852,8 @@ const SearchPage = ({ searchParams }: SearchPageProps) => {
               key={fund.id}
               className="border rounded-lg hover:bg-primary-foreground/80 duration-300 group"
             >
-              <Link
-                href={fund.urlFactsheet}
+              <div
+                onClick={() => redirect(`/search/ffs?url=${fund.urlFactsheet}`)}
                 className="flex justify-between items-center p-4"
               >
                 <div>
@@ -920,7 +896,7 @@ const SearchPage = ({ searchParams }: SearchPageProps) => {
                     <p className="text-xs">{fund.fundRiskLevelId}</p>
                   </div>
                 </div>
-              </Link>
+              </div>
             </div>
           ))}
         </div>
@@ -937,8 +913,8 @@ const SearchPage = ({ searchParams }: SearchPageProps) => {
         <p>
           - ข้อมูล ณ สิ้นสุดเดิอน ธันวาคม พ.ศ. 2567 <br />
           - ระยะเวลามากกว่า 1 ปีขึ้นไปจะแสดงในรูปแบบของข้อมูลต่อปี <br />
-          - ข้อมูลที่แสดงทั้งหมดมาจากแหล่งข้อมูลที่น่าเชื่อถือ เช่น สำนักงาน กลต.
-          หรือ เว็บไซต์ของบริษัทหลักทรัพย์จัดการกองทุน เป็นต้น อย่างไรก็ตาม
+          - ข้อมูลที่แสดงทั้งหมดมาจากแหล่งข้อมูลที่น่าเชื่อถือ เช่น สำนักงาน
+          กลต. หรือ เว็บไซต์ของบริษัทหลักทรัพย์จัดการกองทุน เป็นต้น อย่างไรก็ตาม
           ทางเราไม่รับรองถึงความถูกต้องสมบูรณ์ของข้อมูลดังกล่าว
           <br />
         </p>

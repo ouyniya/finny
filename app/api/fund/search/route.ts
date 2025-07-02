@@ -6,9 +6,10 @@ export async function GET(req: Request) {
   const fundCompareGroup = searchParams.get("fundCompareGroup") || "";
   const projAbbrName = searchParams.get("name") || "";
   const companyId = searchParams.get("company") || "";
-  const skip = searchParams.get("skip") || "0";
-  const takeParam = searchParams.get("take") || "10";
-  const take = Math.min(+takeParam, 10);
+  const page = searchParams.get("page") || "1";
+
+  const take = 10;
+  const skip = take * (+page - 1) || 0;
 
   const filters = {
     projAbbrName: projAbbrName.toUpperCase(),
