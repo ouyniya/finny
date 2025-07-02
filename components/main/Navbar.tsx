@@ -24,16 +24,27 @@ const Navbar = () => {
             </Link>
             <div className="flex gap-10">
               {!isLoaded ? (
-                <><Loading /></>
+                <>
+                  <Loading />
+                </>
               ) : user ? (
                 <>
                   <UserButton />
-                  <SignOutButton className="hover:cursor-pointer hover:text-primary hover:text-shadow-[0_0px_16px_rgb(255_0_0_/_1)] hover:text-shadow-red-500 duration-300" />
+
+                  <SignOutButton>
+                    <button className="hover:cursor-pointer hover:text-primary hover:text-shadow-[0_0px_16px_rgb(255_0_0_/_1)] hover:text-shadow-red-500 duration-300">
+                      Login
+                    </button>
+                  </SignOutButton>
                 </>
               ) : (
                 <>
-                  <SignInButton className="link" />
-                  <SignUpButton className="link" />
+                  <SignInButton>
+                    <button className="link">Login</button>
+                  </SignInButton>
+                  <SignUpButton>
+                    <button className="link">Register</button>
+                  </SignUpButton>
                 </>
               )}
             </div>

@@ -876,7 +876,10 @@ const SearchPage = ({ searchParams }: SearchPageProps) => {
               key={fund.id}
               className="border rounded-lg hover:bg-primary-foreground/80 duration-300 group"
             >
-              <Link href={fund.urlFactsheet} className="flex justify-between items-center p-4">
+              <Link
+                href={fund.urlFactsheet}
+                className="flex justify-between items-center p-4"
+              >
                 <div>
                   <h3 className="flex gap-2 items-center font-medium">
                     {fund.projAbbrName}
@@ -928,6 +931,18 @@ const SearchPage = ({ searchParams }: SearchPageProps) => {
       {state.error && (
         <div className="text-red-500 text-center mt-4">{state.error}</div>
       )}
+
+      <div className="lg:basis-1/2 relative h-full md:h-[135px] md:overflow-hidden text-sm opacity-50 p-4">
+        <p className="font-bold">หมายเหตุ</p>
+        <p>
+          - ข้อมูล ณ สิ้นสุดเดิอน ธันวาคม พ.ศ. 2567 <br />
+          - ระยะเวลามากกว่า 1 ปีขึ้นไปจะแสดงในรูปแบบของข้อมูลต่อปี <br />
+          - ข้อมูลที่แสดงทั้งหมดมาจากแหล่งข้อมูลที่น่าเชื่อถือ เช่น สำนักงาน กลต.
+          หรือ เว็บไซต์ของบริษัทหลักทรัพย์จัดการกองทุน เป็นต้น อย่างไรก็ตาม
+          ทางเราไม่รับรองถึงความถูกต้องสมบูรณ์ของข้อมูลดังกล่าว
+          <br />
+        </p>
+      </div>
     </>
   );
 };
