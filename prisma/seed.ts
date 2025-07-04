@@ -1,63 +1,145 @@
 // npx prisma db seed
-import { PrismaClient } from "@prisma/client";
+// https://sec.gdcatalog.go.th/api/3/action/datastore_search?resource_id=1e3f090f-0b24-4f47-8d8b-d3de1c49414b&limit=10000&offset=0
+
+import { Prisma, PrismaClient } from "@prisma/client";
 const prisma = new PrismaClient();
 
-import csvToJson from "convert-csv-to-json";
-import { fundsData } from "../information/funds";
-import { classAbbrData } from "../information/classAbbr";
-import { Prisma } from "@prisma/client";
+import { readFile } from "fs/promises";
+import path from "path";
 
-const fileInputNamePerformance = "performance.csv";
-console.log("Reading performance CSV from:", fileInputNamePerformance);
-
-const fundPerformanceRiskDataRaw = csvToJson
-  .fieldDelimiter(",")
-  .getJsonFromCsv(fileInputNamePerformance);
-
-const fileInputName = "feeDetail.csv";
-const feeDetailDataRaw = csvToJson
-  .fieldDelimiter(",")
-  .getJsonFromCsv(fileInputName);
-
-const feeDetailDataBeforeInt = JSON.parse(JSON.stringify(feeDetailDataRaw));
-
-const insertFee = async () => {
-  try {
-    for (const el of feeDetailDataBeforeInt) {
-      const data = {
-        feeType: el.feeType,
-        rate: Number(el.rate),
-        rateUnit: el.rateUnit,
-        actualValue: el.actualValue === "" ? null : Number(el.actualValue),
-        classAbbrId: Number(el.classAbbrId),
-      };
-
-      console.log("OK####", el.classAbbrId);
-
-      await prisma.feeDetail.create({
-        data: data,
-      });
-    }
-  } catch (error) {
-    console.log(error);
-  }
-};
-
-const fundPerformanceRiskDataInt = JSON.parse(
-  JSON.stringify(fundPerformanceRiskDataRaw)
-);
-
-const fundPerformanceRiskData: Prisma.FundPerformanceRiskUncheckedCreateInput[] =
-  [];
-
-for (const el of fundPerformanceRiskDataInt) {
-  fundPerformanceRiskData.push({
-    performanceType: el.performanceType,
-    performancePeriod: el.performancePeriod,
-    performanceValue: Number(el.performanceValue),
-    classAbbrId: Number(el.classAbbrId),
-  });
+interface FundTypeProps {
+  id: number;
+  asOfDate: string;
+  regisIdYear1: string;
+  type: string;
+  projThaiName: string;
+  projAbbrName: string;
+  compThaiName: string;
+  isinCode: string;
+  projType: string;
+  numSell: string;
+  projOfferPlace: string;
+  projRetailType: string;
+  unitMulticlass: string;
+  classList: string;
+  policyThaiDesc: string;
+  specGrDesc: string;
+  mainFeederFund: string;
+  feederCountry: string;
+  mainFeederFundUcits: string;
+  futureFlag: string;
+  futureReason: string;
+  riskFlag: string;
+  globalExposureLimitMethod: string;
+  noteFlag: string;
+  policySpecDesc: string;
+  currentRmfPvdType: string;
+  managementStyleTh: string;
+  fundCompare: string;
+  mutualInvType: string;
+  investCountryFlagEng: string;
+  redempPeriodEng: string;
+  redempPeriodOth: string;
+  projTermTh: string;
+  trackingError: string;
+  benchmarkDescTh: string;
+  benchmarkRatio: string;
+  yieldPaying: string;
+  dividendPolicy: string;
+  riskSpectrum: string;
+  supervisorNameEng: string;
+  apprDate: string;
+  regisDate: string;
+  sellVal: string;
+  pcancDate: string;
+  cancCancNav: string;
+  cancDate: string;
 }
+
+type FundDetailCreateManyInput = Prisma.FundDetailCreateManyInput;
+
+async function isFundsData(): Promise<FundDetailCreateManyInput[]> {
+  const json = JSON.parse(
+    await readFile(path.join(__dirname, "../data/fundData.json"), "utf8")
+  );
+
+  const records = json?.result?.records;
+
+  if (Array.isArray(records) && records.length > 0) {
+    console.log("🌟 Data found !!");
+    console.log("💬 Please wait...");
+    console.log("🧹️ Cleansing data...");
+
+    // insert to new obj
+    const totalRecords = records.length;
+    console.log(totalRecords);
+
+    const recordsFund: FundTypeProps[] = [];
+
+    records.forEach((record) => {
+      if (record["canc_date"] === "-" && record.TYPE !== ("จดทะเบียนเลิก")) {
+        recordsFund.push({
+          id: +record?._id,
+          asOfDate: record["As of date"],
+          regisIdYear1: record.regis_id_year1,
+          type: record.TYPE,
+          projThaiName: record.PROJ_THAI_NAME,
+          projAbbrName: record.PROJ_ABBR_NAME,
+          compThaiName: record.COMP_THAI_NAME,
+          isinCode: record.isin_code,
+          projType: record.PROJ_TYPE,
+          numSell: record.NUM_SELL,
+          projOfferPlace: record.PROJ_OFFER_PLACE,
+          projRetailType: record.PROJ_RETAIL_TYPE,
+          unitMulticlass: record.unit_multiclass,
+          classList: record.class_list,
+          policyThaiDesc: record.POLICY_THAI_DESC,
+          specGrDesc: record.SPEC_GR_DESC.substring(0, 499),
+          mainFeederFund: record.main_feeder_fund,
+          feederCountry: record.feeder_country,
+          mainFeederFundUcits: record.main_feeder_fund_ucits,
+          futureFlag: record.FUTURE_FLAG,
+          futureReason: record.future_reas,
+          riskFlag: record.risk_flag,
+          globalExposureLimitMethod: record.global_exposure_limit_method,
+          noteFlag: record.NOTE_FLAG,
+          policySpecDesc: record.policyspec_desc.substring(0, 999),
+          currentRmfPvdType: record.current_rmf_pvd_type,
+          managementStyleTh: record.management_style_th,
+          fundCompare: record.fund_compare,
+          mutualInvType: record.MUTUAL_INV_TYPE,
+          investCountryFlagEng: record.INVEST_COUNTRY_FLAG_ENG,
+          redempPeriodEng: record.redemp_period_eng,
+          redempPeriodOth: record.redemp_period_oth.substring(0, 199),
+          projTermTh: record.proj_term_th,
+          trackingError: record.tracking_error,
+          benchmarkDescTh: record.benchmark_desc_th,
+          benchmarkRatio: record.benchmark_ratio,
+          yieldPaying: record.yield_paying,
+          dividendPolicy: record.dividend_policy,
+          riskSpectrum: record.risk_spectrum,
+          supervisorNameEng: record.SUPERVISOR_NAME_ENG,
+          apprDate: record.APPR_DATE,
+          regisDate: record.REGIS_DATE,
+          sellVal: record.SELL_VAL,
+          pcancDate: record.pcanc_date,
+          cancCancNav: record.canc_canc_nav,
+          cancDate: record.canc_date,
+        });
+        console.log(record._id, "/", totalRecords, record.PROJ_ABBR_NAME);
+      }
+    });
+
+    console.log("total records we used:", recordsFund.length);
+
+    return recordsFund;
+  } else {
+    console.error("❌ No records found or data is invalid");
+    return [];
+  }
+}
+
+isFundsData().catch(console.error);
 
 const riskAssessmentResultData = [
   {
@@ -489,135 +571,42 @@ const recommendCriteriaData = [
   },
 ];
 
-const fundRiskLevelData = [
-  {
-    fundRiskLevelName: "กองทุนรวมตลาดเงินในประเทศ",
-    fundInvestment: "เงินฝากและตราสารหนี้ที่มีอายุเฉลี่ยไม่เกิน 3 เดือน",
-  },
-  {
-    fundRiskLevelName: "กองทุนรวมตลาดเงินในประเทศผสมต่างประเทศ",
-    fundInvestment:
-      "กองทุนที่ลงทุนในสินทรัพย์เหมือนระดับ 1 แต่ลงทุนในต่างประเทศไม่เกินร้อยละ 50 ของสินทรัพย์สุทธิ",
-  },
-  {
-    fundRiskLevelName: "กองทุนรวมพันธบัตรรัฐบาล",
-    fundInvestment: "กองทุนที่ลงทุนในพันธบัตรรัฐบาล",
-  },
-  {
-    fundRiskLevelName: "กองทุนรวมตราสารหนี้",
-    fundInvestment: "กองทุนที่ลงทุนในตราสารหนี้ทั่วไป",
-  },
-  {
-    fundRiskLevelName: "กองทุนรวมผสม",
-    fundInvestment: "กองทุนที่ลงทุนในทั้งหุ้นและตราสารหนี้",
-  },
-  {
-    fundRiskLevelName: "กองทุนรวมตราสารทุน",
-    fundInvestment: "กองทุนที่ลงทุนในหุ้น",
-  },
-  {
-    fundRiskLevelName: "กองทุนรวมหมวดอุตสาหกรรม",
-    fundInvestment:
-      "กองทุนที่ลงทุนในหุ้นที่กระจุกตัวอยู่ในกลุ่มอุตสาหกรรมเดียวกันโดยเฉพาะ",
-  },
-  {
-    fundRiskLevelName: "กองทุนรวมสินทรัพย์ทางเลือก",
-    fundInvestment: "กองทุนที่ลงทุนในสินทรัพย์ทางเลือก เช่น น้ำมัน ทองคำ",
-  },
-];
-
-const companyData = [
-  {
-    companyName: "บริษัท หลักทรัพย์จัดการกองทุนกสิกรไทย จำกัด",
-  },
-  {
-    companyName: "บริษัท หลักทรัพย์จัดการกองทุนเอ็มเอฟซี จำกัด (มหาชน)",
-  },
-  {
-    companyName: "บริษัท หลักทรัพย์จัดการกองทุนเมอร์ชั่น พาร์ทเนอร์ จำกัด",
-  },
-  {
-    companyName: "บริษัท หลักทรัพย์จัดการกองทุนทหารไทย จำกัด",
-  },
-  {
-    companyName: "บริษัท หลักทรัพย์จัดการกองทุนไทยพาณิชย์ จำกัด",
-  },
-  {
-    companyName: "บริษัท หลักทรัพย์จัดการกองทุนอเบอร์ดีน (ประเทศไทย) จำกัด",
-  },
-  {
-    companyName: "บริษัท หลักทรัพย์จัดการกองทุนทิสโก้ จำกัด",
-  },
-  {
-    companyName: "บริษัท หลักทรัพย์จัดการกองทุนรวมบัวหลวง จำกัด",
-  },
-  {
-    companyName: "บริษัท หลักทรัพย์จัดการกองทุนกรุงไทย จำกัด (มหาชน)",
-  },
-  {
-    companyName: "บริษัท หลักทรัพย์จัดการกองทุน วรรณ จำกัด",
-  },
-  {
-    companyName: "บริษัท หลักทรัพย์จัดการกองทุนยูโอบี (ประเทศไทย) จำกัด",
-  },
-  {
-    companyName: "บริษัท หลักทรัพย์จัดการกองทุนกรุงศรี จำกัด",
-  },
-  {
-    companyName: "บริษัท หลักทรัพย์จัดการกองทุนธนชาต จำกัด",
-  },
-  {
-    companyName:
-      "บริษัท หลักทรัพย์จัดการกองทุนสยาม ไนท์ ฟันด์ แมเนจเม้นท์ จำกัด",
-  },
-  {
-    companyName: "บริษัท หลักทรัพย์จัดการกองทุนฟินันซ่า จำกัด",
-  },
-  {
-    companyName: "บริษัท หลักทรัพย์จัดการกองทุนแอสเซท พลัส จำกัด",
-  },
-  {
-    companyName: "บริษัท หลักทรัพย์จัดการกองทุนเกียรตินาคินภัทร จำกัด",
-  },
-  {
-    companyName: "บริษัท หลักทรัพย์จัดการกองทุนพรินซิเพิล จำกัด",
-  },
-  {
-    companyName: "บริษัท หลักทรัพย์จัดการกองทุนเอ็กซ์สปริง จำกัด",
-  },
-  {
-    companyName: "บริษัท หลักทรัพย์จัดการกองทุนรวมฟิลลิป จำกัด",
-  },
-  {
-    companyName: "บริษัท หลักทรัพย์จัดการกองทุนเคดับบลิวไอ จำกัด",
-  },
-  {
-    companyName: "บริษัท หลักทรัพย์จัดการกองทุนเรนเนสซานซ์ จำกัด",
-  },
-  {
-    companyName: "บริษัท หลักทรัพย์จัดการกองทุนแลนด์ แอนด์ เฮ้าส์ จำกัด",
-  },
-  {
-    companyName: "บริษัท หลักทรัพย์จัดการกองทุนบางกอกแคปปิตอล จำกัด",
-  },
-  {
-    companyName: "บริษัท หลักทรัพย์จัดการกองทุนทาลิส จำกัด",
-  },
-  {
-    companyName: "บริษัท หลักทรัพย์จัดการกองทุนดาโอ จำกัด",
-  },
-  {
-    companyName: "บริษัท หลักทรัพย์จัดการกองทุนเอไอเอ (ประเทศไทย) จำกัด",
-  },
-  {
-    companyName: "บริษัท หลักทรัพย์จัดการกองทุนซาวาคามิ (ประเทศไทย) จำกัด",
-  },
-  {
-    companyName: "บริษัท หลักทรัพย์จัดการกองทุนอีสท์สปริง (ประเทศไทย) จำกัด",
-  },
-];
-
-console.log("db seed...user");
+// const fundRiskLevelData = [
+//   {
+//     fundRiskLevelName: "กองทุนรวมตลาดเงินในประเทศ",
+//     fundInvestment: "เงินฝากและตราสารหนี้ที่มีอายุเฉลี่ยไม่เกิน 3 เดือน",
+//   },
+//   {
+//     fundRiskLevelName: "กองทุนรวมตลาดเงินในประเทศผสมต่างประเทศ",
+//     fundInvestment:
+//       "กองทุนที่ลงทุนในสินทรัพย์เหมือนระดับ 1 แต่ลงทุนในต่างประเทศไม่เกินร้อยละ 50 ของสินทรัพย์สุทธิ",
+//   },
+//   {
+//     fundRiskLevelName: "กองทุนรวมพันธบัตรรัฐบาล",
+//     fundInvestment: "กองทุนที่ลงทุนในพันธบัตรรัฐบาล",
+//   },
+//   {
+//     fundRiskLevelName: "กองทุนรวมตราสารหนี้",
+//     fundInvestment: "กองทุนที่ลงทุนในตราสารหนี้ทั่วไป",
+//   },
+//   {
+//     fundRiskLevelName: "กองทุนรวมผสม",
+//     fundInvestment: "กองทุนที่ลงทุนในทั้งหุ้นและตราสารหนี้",
+//   },
+//   {
+//     fundRiskLevelName: "กองทุนรวมตราสารทุน",
+//     fundInvestment: "กองทุนที่ลงทุนในหุ้น",
+//   },
+//   {
+//     fundRiskLevelName: "กองทุนรวมหมวดอุตสาหกรรม",
+//     fundInvestment:
+//       "กองทุนที่ลงทุนในหุ้นที่กระจุกตัวอยู่ในกลุ่มอุตสาหกรรมเดียวกันโดยเฉพาะ",
+//   },
+//   {
+//     fundRiskLevelName: "กองทุนรวมสินทรัพย์ทางเลือก",
+//     fundInvestment: "กองทุนที่ลงทุนในสินทรัพย์ทางเลือก เช่น น้ำมัน ทองคำ",
+//   },
+// ];
 
 async function seedDB() {
   await prisma.riskAssessmentResult.createMany({
@@ -635,27 +624,21 @@ async function seedDB() {
   await prisma.recommendCriteria.createMany({
     data: recommendCriteriaData,
   });
-  await prisma.fundRiskLevel.createMany({
-    data: fundRiskLevelData,
-  });
-  await prisma.company.createMany({
-    data: companyData,
-  });
-  await prisma.funds.createMany({
-    data: fundsData,
-  });
-  await prisma.classAbbr.createMany({
-    data: classAbbrData,
-  });
 
-  await insertFee();
-  await seedDBPfm();
-}
+  async function run() {
+    const fundsData = await isFundsData();
 
-async function seedDBPfm() {
-  await prisma.fundPerformanceRisk.createMany({
-    data: fundPerformanceRiskData,
-  });
+    if (fundsData.length > 0) {
+      await prisma.fundDetail.createMany({
+        data: fundsData,
+      });
+      console.log("Seed success!");
+    } else {
+      console.log("No data to seed.");
+    }
+  }
+
+  run();
 }
 
 seedDB();

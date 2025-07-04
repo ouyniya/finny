@@ -3,9 +3,12 @@ import { NextResponse } from "next/server";
 
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
-  const fundCompareGroup = searchParams.get("fundCompareGroup") || "";
+  const fundCompare = searchParams.get("fundCompare") || "";
   const projAbbrName = searchParams.get("name") || "";
-  const companyId = searchParams.get("company") || "";
+  const company = searchParams.get("company") || "";
+  const dividend = searchParams.get("dividend") || "";
+  const mutualInvType = searchParams.get("mutualInvType") || "";
+
   const page = searchParams.get("page") || "1";
 
   const take = 10;
@@ -13,41 +16,55 @@ export async function GET(req: Request) {
 
   const filters = {
     projAbbrName: projAbbrName.toUpperCase(),
-    fundCompareGroup,
-    companyId: companyId ? Number(companyId) : undefined,
+    fundCompare,
+    company: company,
+    dividend: dividend,
+    mutualInvType: mutualInvType,
   };
 
   try {
     const [data, total] = await Promise.all([
-      prisma.funds.findMany({
+      prisma.fundDetail.findMany({
         where: {
           ...(filters.projAbbrName && {
             projAbbrName: {
               contains: filters.projAbbrName,
             },
           }),
-          ...(filters.fundCompareGroup && {
-            fundCompareGroup: filters.fundCompareGroup,
+          ...(filters.fundCompare && {
+            fundCompare: filters.fundCompare,
           }),
-          ...(filters.companyId !== undefined && {
-            companyId: filters.companyId,
+          ...(filters.company && {
+            compThaiName: filters.company,
+          }),
+          ...(filters.dividend && {
+            dividendPolicy: filters.dividend,
+          }),
+          ...(filters.mutualInvType && {
+            mutualInvType: filters.mutualInvType,
           }),
         },
         skip: +skip,
         take: take,
       }),
-      prisma.funds.count({
+      prisma.fundDetail.count({
         where: {
           ...(filters.projAbbrName && {
             projAbbrName: {
               contains: filters.projAbbrName,
             },
           }),
-          ...(filters.fundCompareGroup && {
-            fundCompareGroup: filters.fundCompareGroup,
+          ...(filters.fundCompare && {
+            fundCompare: filters.fundCompare,
           }),
-          ...(filters.companyId !== undefined && {
-            companyId: filters.companyId,
+          ...(filters.company && {
+            compThaiName: filters.company,
+          }),
+          ...(filters.dividend && {
+            dividendPolicy: filters.dividend,
+          }),
+          ...(filters.mutualInvType && {
+            mutualInvType: filters.mutualInvType,
           }),
         },
       }),

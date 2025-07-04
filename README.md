@@ -8,6 +8,7 @@
 - [Avatars](https://alohe.github.io/avatars/)
 - Image by Open Peeps from https://www.openpeeps.com/ is licensed under CC0 1.0
 - [Magic UI](https://magicui.design/)
+- [Loader animation](https://css-loaders.com/infinity/)
 
 
 ## Credits

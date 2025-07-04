@@ -1,23 +1,16 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
-  // output   = "../lib/generated/prisma"
 }
 
 datasource db {
   provider = "mysql"
   url      = env("DATABASE_URL")
-  // relationMode = "prisma"
 }
 
 enum Role {
   ADMIN
   MODERATOR
+  PREMIUM
   USER
 }
 
@@ -30,10 +23,7 @@ model User {
   updatedAt    DateTime @updatedAt @map("updated_at")
   role         Role     @default(USER)
 
-  userRiskAssessments UserRiskAssessment[]
-  wishlists           Wishlist[]
-
-  UserPortfolio UserPortfolio[]
+  wishlists Wishlist[]
 }
 
 model RiskAssessmentResult {
@@ -41,7 +31,6 @@ model RiskAssessmentResult {
   minScore Int
   maxScore Int
 
-  userRiskLevel     UserRiskAssessment[]
   riskLevelMapping  RiskLevelMapping[]
   recommendPort     RecommendPort[]
   recommendCriteria RecommendCriteria[]
@@ -49,27 +38,17 @@ model RiskAssessmentResult {
 
 model RecommendCriteria {
   id              String @id @default(uuid())
-  userRiskLevelId Int @map("user_risk_level_id")
+  userRiskLevelId Int    @map("user_risk_level_id")
   fundAssetType   String @map("fund_asset_type")
   percentInvest   String @map("percent_invest")
 
   riskAssessmentResult RiskAssessmentResult @relation(fields: [userRiskLevelId], references: [id], onDelete: Cascade)
 }
 
-model UserRiskAssessment {
-  id        String   @id @default(uuid())
-  createdAt DateTime @default(now()) @map("created_at")
-
-  userId               String               @map("user_id")
-  users                User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userRiskLevelId      Int               @map("user_risk_level_id")
-  riskAssessmentResult RiskAssessmentResult @relation(fields: [userRiskLevelId], references: [id], onDelete: Cascade)
-}
-
 // ผู้ลงทุนระดับความเสี่ยง 6 สามารถลงในกองไหนได้บ้าง
 model RiskLevelMapping {
-  id                   Int               @id @default(autoincrement())
-  userRiskLevelId      Int               @map("user_risk_level_id")
+  id                   Int                  @id @default(autoincrement())
+  userRiskLevelId      Int                  @map("user_risk_level_id")
   riskAssessmentResult RiskAssessmentResult @relation(fields: [userRiskLevelId], references: [id], onDelete: Cascade)
   fundRiskLevelName    String               @map("fund_risk_level_name") // array ["ตราสารทุน", "ตราสารหนี้"]
 }
@@ -79,7 +58,7 @@ model RecommendPort {
   investmentType String @map("investment_type")
   weight         Float
 
-  userRiskLevelId      Int               @map("user_risk_level_id")
+  userRiskLevelId      Int                  @map("user_risk_level_id")
   riskAssessmentResult RiskAssessmentResult @relation(fields: [userRiskLevelId], references: [id], onDelete: Cascade)
 }
 
@@ -92,71 +71,55 @@ model RiskAssessmentQuestion {
   option4  String
 }
 
-model Funds {
-  id                Int  @id @default(autoincrement())
-  fundCompareGroup  String  @map("fund_compare_group")
-  investCountryFlag String  @map("invest_country_flag")
-  fundPolicy        String? @map("fund_policy")
-  urlFactsheet      String  @map("url_factsheet")
-  projNameTh        String  @map("proj_name_th")
-  projAbbrName      String  @map("proj_abbr_name")
+model FundDetail {
+  id                        Int    @id @default(autoincrement())
+  asOfDate                  String @map("as_of_date")
+  regisIdYear1              String @map("regis_id_year1")
+  type                      String @map("type")
+  projThaiName              String @map("proj_thai_name")
+  projAbbrName              String @map("proj_abbr_name") 
+  compThaiName              String @map("comp_thai_name")
+  isinCode                  String @map("isin_code")
+  projType                  String @map("proj_type")
+  numSell                   String @map("num_sell")
+  projOfferPlace            String @map("proj_offer_place")
+  projRetailType            String @map("proj_retail_type")
+  unitMulticlass            String @map("unit_multiclass")
+  classList                 String @map("class_list")
+  policyThaiDesc            String @map("policy_thai_desc") @db.VarChar(1000)
+  specGrDesc                String @map("spec_gr_desc") @db.VarChar(500)
+  mainFeederFund            String @map("main_feeder_fund")
+  feederCountry             String @map("feeder_country")
+  mainFeederFundUcits       String @map("main_feeder_fund_ucits")
+  futureFlag                String @map("future_flag")
+  futureReason              String @map("future_reas")
+  riskFlag                  String @map("risk_flag")
+  globalExposureLimitMethod String @map("global_exposure_limit_method")
+  noteFlag                  String @map("note_flag")
+  policySpecDesc            String @map("policyspec_desc") @db.VarChar(1000)
+  currentRmfPvdType         String @map("current_rmf_pvd_type")
+  managementStyleTh         String @map("management_style_th")
+  fundCompare               String @map("fund_compare")
+  mutualInvType             String @map("mutual_inv_type")
+  investCountryFlagEng      String @map("invest_country_flag_eng")
+  redempPeriodEng           String @map("redemp_period_eng")
+  redempPeriodOth           String @map("redemp_period_oth") @db.VarChar(200)
+  projTermTh                String @map("proj_term_th")
+  trackingError             String @map("tracking_error")
+  benchmarkDescTh           String  @map("benchmark_desc_th") @db.VarChar(1000)
+  benchmarkRatio            String @map("benchmark_ratio")
+  yieldPaying               String @map("yield_paying")
+  dividendPolicy            String @map("dividend_policy")
+  riskSpectrum              String @map("risk_spectrum")
+  supervisorNameEng         String @map("supervisor_name_eng")
+  apprDate                  String @map("appr_date")
+  regisDate                 String @map("regis_date")
+  sellVal                   String @map("sell_val")
+  pcancDate                 String @map("pcanc_date")
+  cancCancNav               String @map("canc_canc_nav")
+  cancDate                  String @map("canc_date")
 
-  companyId       Int           @map("company_id")
-  companies       Company       @relation(fields: [companyId], references: [id], onDelete: Cascade)
-  fundRiskLevelId Int        @map("fund_risk_level_id")
-  FundRiskLevel   FundRiskLevel @relation(fields: [fundRiskLevelId], references: [id], onDelete: Cascade)
-
-  ClassAbbr ClassAbbr[]
-}
-
-model Company {
-  id          Int    @id @default(autoincrement())
-  companyName String @map("company_name")
-
-  Funds Funds[]
-}
-
-model FeeDetail {
-  id          String  @id @default(uuid())
-  feeType     String  @map("fee_type")
-  rate        Float
-  rateUnit    String? @map("rate_unit") @db.VarChar(2000)
-  actualValue Float?  @map("actual_value")
-
-  classAbbrId Int    @map("class_abbr_id")
-  classAbbrs  ClassAbbr @relation(fields: [classAbbrId], references: [id], onDelete: Cascade)
-}
-
-model FundPerformanceRisk {
-  id                String @id @default(uuid())
-  performanceType   String @map("performance_type")
-  performancePeriod String @map("performance_period")
-  performanceValue  Float? @map("performance_value")
-
-  classAbbrId Int    @map("class_abbr_id")
-  classAbbrs  ClassAbbr @relation(fields: [classAbbrId], references: [id], onDelete: Cascade)
-}
-
-model FundRiskLevel {
-  id                Int  @id @default(autoincrement())
-  fundRiskLevelName String  @map("fund_risk_level_name")
-  fundInvestment    String  @map("fund_investment")
-  Funds             Funds[]
-}
-
-model ClassAbbr {
-  id             Int @id @default(autoincrement())
-  classAbbrName  String @map("class_abbr_name")
-  dividendPolicy String @map("dividend_policy")
-
-  fundId Int @map("fund_id")
-  funds  Funds  @relation(fields: [fundId], references: [id], onDelete: Cascade)
-
-  FeeDetail           FeeDetail[]
-  fundPerformanceRisk FundPerformanceRisk[]
-  Wishlist            Wishlist[]
-
-  UserPortfolio UserPortfolio[]
+  Wishlist Wishlist[]
 }
 
 model Wishlist {
@@ -166,18 +129,8 @@ model Wishlist {
   createdAt      DateTime @default(now()) @map("created_at")
   updatedAt      DateTime @updatedAt @map("updated_at")
 
-  userId      String    @map("user_id")
-  classAbbrId Int    @map("class_abbr_id")
-  users       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  classAbbr   ClassAbbr @relation(fields: [classAbbrId], references: [id], onDelete: Cascade)
-}
-
-model UserPortfolio {
-  id          String @id @default(uuid())
-  userId      String
-  classAbbrId Int
-  amount      Float
-
-  users      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  classAbbrs ClassAbbr @relation(fields: [classAbbrId], references: [id], onDelete: Cascade)
+  userId       String     @map("user_id")
+  fundDetailId Int        @map("fund_detail_id")
+  user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  fundDetail   FundDetail @relation(fields: [fundDetailId], references: [id], onDelete: Cascade)
 }

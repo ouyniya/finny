@@ -2,10 +2,15 @@ import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 
 export async function GET() {
+  
   try {
-    const result = await prisma.company.findMany({
+    const result = await prisma.fundDetail.groupBy({
+      by: ['compThaiName'],
+      _count: {
+        compThaiName: true,
+      },
       orderBy: {
-        id: "asc",
+        compThaiName: "asc",
       },
     });
     return NextResponse.json(result);

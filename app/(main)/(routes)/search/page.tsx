@@ -12,6 +12,8 @@ import Loading from "@/app/loading";
 import Header from "@/components/main/Header";
 import { Button } from "@/components/ui/button";
 import { Marquee } from "@/components/magicui/marquee";
+import { AnimatedCircularProgressBar } from "@/components/magicui/animated-circular-progress-bar";
+
 import {
   Pagination,
   PaginationContent,
@@ -32,19 +34,56 @@ import {
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import Image from "next/image";
-import { Globe, Trash } from "lucide-react";
+import { AlertCircle, Globe, Trash } from "lucide-react";
 
-// Types
+// Types (keeping the same interfaces)
 interface FundProps {
   id: number;
-  fundCompareGroup: string;
-  investCountryFlag: string;
-  fundPolicy: string;
-  urlFactsheet: string;
-  projNameTh: string;
+  asOfDate: string;
+  regisIdYear1: string;
+  type: string;
+  projThaiName: string;
   projAbbrName: string;
-  companyId: number;
-  fundRiskLevelId: number;
+  compThaiName: string;
+  isinCode: string;
+  projType: string;
+  numSell: string;
+  projOfferPlace: string;
+  projRetailType: string;
+  unitMulticlass: string;
+  classList: string;
+  policyThaiDesc: string;
+  specGrDesc: string;
+  mainFeederFund: string;
+  feederCountry: string;
+  mainFeederFundUcits: string;
+  futureFlag: string;
+  futureReason: string;
+  riskFlag: string;
+  globalExposureLimitMethod: string;
+  noteFlag: string;
+  policySpecDesc: string;
+  currentRmfPvdType: string;
+  managementStyleTh: string;
+  fundCompare: string;
+  mutualInvType: string;
+  investCountryFlagEng: string;
+  redempPeriodEng: string;
+  redempPeriodOth: string;
+  projTermTh: string;
+  trackingError: string;
+  benchmarkDescTh: string;
+  benchmarkRatio: string;
+  yieldPaying: string;
+  dividendPolicy: string;
+  riskSpectrum: string;
+  supervisorNameEng: string;
+  apprDate: string;
+  regisDate: string;
+  sellVal: string;
+  pcancDate: string;
+  cancCancNav: string;
+  cancDate: string;
 }
 
 interface ResultWithTotal {
@@ -53,30 +92,28 @@ interface ResultWithTotal {
 }
 
 interface FundType {
-  _count: { fundCompareGroup: number };
-  fundCompareGroup: string;
+  _count: { fundCompare: number };
+  fundCompare: string;
 }
 
 interface Company {
-  id: string;
-  companyName: string;
+  _count: { compThaiName: number };
+  compThaiName: string;
 }
 
 interface SearchInput {
   name: string;
-  fundCompareGroup: string;
+  fundCompare: string;
   company: string;
   page: string;
 }
 
-// Loading state management
 interface LoadingState {
   fundTypes: boolean;
   companies: boolean;
   results: boolean;
 }
 
-// State management with useReducer
 interface AppState {
   fundTypes: FundType[];
   companies: Company[];
@@ -84,9 +121,9 @@ interface AppState {
   searchInput: SearchInput;
   loading: LoadingState;
   error: string;
+  initialized: boolean; // Add this to track initialization
 }
 
-// Component Props
 interface SearchPageProps {
   searchParams: Promise<SearchInput>;
 }
@@ -98,9 +135,10 @@ type AppAction =
   | { type: "SET_SEARCH_INPUT"; payload: Partial<SearchInput> }
   | { type: "SET_LOADING"; payload: Partial<LoadingState> }
   | { type: "SET_ERROR"; payload: string }
+  | { type: "SET_INITIALIZED"; payload: boolean }
   | { type: "CLEAR_FILTERS" };
 
-// API Service Class
+// API Service Class (keeping the same)
 class FundSearchService {
   private static instance: FundSearchService;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -160,7 +198,7 @@ class FundSearchService {
   }
 }
 
-// Reducer function
+// Updated reducer function
 function appReducer(state: AppState, action: AppAction): AppState {
   switch (action.type) {
     case "SET_FUND_TYPES":
@@ -190,12 +228,14 @@ function appReducer(state: AppState, action: AppAction): AppState {
       return { ...state, loading: { ...state.loading, ...action.payload } };
     case "SET_ERROR":
       return { ...state, error: action.payload };
+    case "SET_INITIALIZED":
+      return { ...state, initialized: action.payload };
     case "CLEAR_FILTERS":
       return {
         ...state,
         searchInput: {
           name: "",
-          fundCompareGroup: "",
+          fundCompare: "",
           company: "",
           page: "1",
         },
@@ -207,10 +247,14 @@ function appReducer(state: AppState, action: AppAction): AppState {
   }
 }
 
-// Custom hook for search functionality
+// Updated custom hook
 function useSearchFunds(initialParams: SearchInput) {
   const router = useRouter();
   const service = useMemo(() => FundSearchService.getInstance(), []);
+  const hasInitialSearch = useMemo(
+    () => Object.values(initialParams).some((value) => value && value !== "1"),
+    [initialParams]
+  );
 
   const initialState: AppState = {
     fundTypes: [],
@@ -219,149 +263,63 @@ function useSearchFunds(initialParams: SearchInput) {
     searchInput: initialParams,
     loading: { fundTypes: true, companies: true, results: false },
     error: "",
+    initialized: false,
   };
 
   const [state, dispatch] = useReducer(appReducer, initialState);
 
-  // Fetch initial data
+  // Single initialization effect
   useEffect(() => {
-    const fetchInitialData = async () => {
+    let isMounted = true;
+
+    const initialize = async () => {
       try {
         const [fundTypes, companies] = await Promise.all([
           service.getFundTypes(),
           service.getCompanies(),
         ]);
 
+        if (!isMounted) return;
+
         dispatch({ type: "SET_FUND_TYPES", payload: fundTypes });
         dispatch({ type: "SET_COMPANIES", payload: companies });
+        dispatch({ type: "SET_INITIALIZED", payload: true });
 
-        // After companies are loaded, validate the initial company parameter
-        if (initialParams.company) {
-          const companyExists = companies.some(
-            (c) => +c.id === +initialParams.company
-          );
-          if (!companyExists) {
-            // If company doesn't exist, clear the company filter
-            dispatch({ type: "SET_SEARCH_INPUT", payload: { company: "" } });
+        // Only perform initial search if there are search parameters
+        if (hasInitialSearch) {
+          dispatch({ type: "SET_LOADING", payload: { results: true } });
+          const results = await service.searchFunds(initialParams);
+          if (isMounted) {
+            dispatch({ type: "SET_RESULTS", payload: results });
           }
         }
       } catch (error) {
-        const errorMessage =
-          error instanceof Error ? error.message : "Unknown error occurred";
-        dispatch({ type: "SET_ERROR", payload: errorMessage });
-        dispatch({
-          type: "SET_LOADING",
-          payload: { fundTypes: false, companies: false },
-        });
+        if (isMounted) {
+          const errorMessage =
+            error instanceof Error ? error.message : "Unknown error occurred";
+          dispatch({ type: "SET_ERROR", payload: errorMessage });
+          dispatch({
+            type: "SET_LOADING",
+            payload: { fundTypes: false, companies: false, results: false },
+          });
+        }
       }
     };
 
-    fetchInitialData();
-  }, [service, initialParams.company]);
+    initialize();
 
-  // Search function
-  const performSearch = useCallback(async () => {
-    dispatch({ type: "SET_LOADING", payload: { results: true } });
-    dispatch({ type: "SET_ERROR", payload: "" });
-
-    try {
-      const results = await service.searchFunds(state.searchInput);
-      dispatch({ type: "SET_RESULTS", payload: results });
-      console.log(results);
-    } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : "Unknown error occurred";
-      dispatch({ type: "SET_ERROR", payload: errorMessage });
-      dispatch({ type: "SET_RESULTS", payload: { data: [], total: 0 } });
-    }
-  }, [service, state.searchInput]);
-
-  // Update URL and perform search
-  const handleSearchV2 = useCallback(() => {
-    const params = new URLSearchParams();
-    // Calculate skip based on current page
-
-    // Update search input with calculated skip
-    const searchInputWithSkip = {
-      ...state.searchInput,
+    return () => {
+      isMounted = false;
     };
+  }, []); // Empty dependency array - only run once
 
-    Object.entries(searchInputWithSkip).forEach(([key, value]) => {
-      if (value && key !== "page") params.set(key, value);
-    });
-
-    // Always include page in URL
-    if (state.searchInput.page) {
-      params.set("page", state.searchInput.page);
-    }
-
-    router.push(`?${params.toString()}`);
-    performSearch();
-  }, [state.searchInput, router, performSearch]);
-
-  // Clear filters
-  const clearFilters = useCallback(() => {
-    dispatch({ type: "CLEAR_FILTERS" });
-    router.push("?");
-  }, [router]);
-
-  // Update search input
-  const updateSearchInput = useCallback((updates: Partial<SearchInput>) => {
-    dispatch({ type: "SET_SEARCH_INPUT", payload: updates });
-  }, []);
-
-  // Update URL and perform search
-  const handleSearch = useCallback(() => {
-    // Create the new search input object
-    const newSearchInput = {
-      ...state.searchInput,
-      page: "1",
-    };
-    // Update the state
-    updateSearchInput(newSearchInput);
-
-    // Immediately search with the NEW values (not waiting for state update)
-    performSearchWithParams(newSearchInput);
-  }, [state.searchInput, updateSearchInput]);
-
-  const handlePageChange = useCallback(
-    (newPage: number) => {
-
-      // Create the new search input object
-      const newSearchInput = {
-        ...state.searchInput,
-        page: newPage.toString(),
-      };
-
-      // Update the state
-      updateSearchInput({
-        page: newPage.toString(),
-      });
-
-      // Immediately search with the NEW values (not waiting for state update)
-      performSearchWithParams(newSearchInput);
-    },
-    [state.searchInput, updateSearchInput]
-  );
-
-  const performSearchWithParams = useCallback(
-    async (searchInput: SearchInput) => {
+  const performSearch = useCallback(
+    async (searchParams: SearchInput) => {
       dispatch({ type: "SET_LOADING", payload: { results: true } });
       dispatch({ type: "SET_ERROR", payload: "" });
 
       try {
-        // Update URL
-        const params = new URLSearchParams();
-        Object.entries(searchInput).forEach(([key, value]) => {
-          if (value && key !== "page") params.set(key, value);
-        });
-        if (searchInput.page) {
-          params.set("page", searchInput.page);
-        }
-        router.push(`?${params.toString()}`);
-
-        // Perform search with the provided parameters
-        const results = await service.searchFunds(searchInput);
+        const results = await service.searchFunds(searchParams);
         dispatch({ type: "SET_RESULTS", payload: results });
       } catch (error) {
         const errorMessage =
@@ -370,25 +328,70 @@ function useSearchFunds(initialParams: SearchInput) {
         dispatch({ type: "SET_RESULTS", payload: { data: [], total: 0 } });
       }
     },
-    [service, router]
+    [service]
   );
+
+  const updateSearchInput = useCallback((updates: Partial<SearchInput>) => {
+    dispatch({ type: "SET_SEARCH_INPUT", payload: updates });
+  }, []);
+
+  const handleSearch = useCallback(() => {
+    const newSearchInput = {
+      ...state.searchInput,
+      page: "1",
+    };
+
+    updateSearchInput({ page: "1" });
+
+    const params = new URLSearchParams();
+    Object.entries(newSearchInput).forEach(([key, value]) => {
+      if (value && key !== "page") params.set(key, value);
+    });
+    if (newSearchInput.page) params.set("page", newSearchInput.page);
+
+    router.push(`?${params.toString()}`);
+    performSearch(newSearchInput);
+  }, [state.searchInput, updateSearchInput, router, performSearch]);
+
+  const handlePageChange = useCallback(
+    (newPage: number) => {
+      const newSearchInput = {
+        ...state.searchInput,
+        page: newPage.toString(),
+      };
+
+      updateSearchInput({ page: newPage.toString() });
+
+      const params = new URLSearchParams();
+      Object.entries(newSearchInput).forEach(([key, value]) => {
+        if (value && key !== "page") params.set(key, value);
+      });
+      if (newSearchInput.page) params.set("page", newSearchInput.page);
+
+      router.push(`?${params.toString()}`);
+      performSearch(newSearchInput);
+    },
+    [state.searchInput, updateSearchInput, router, performSearch]
+  );
+
+  const clearFilters = useCallback(() => {
+    dispatch({ type: "CLEAR_FILTERS" });
+    router.push("?");
+  }, [router]);
 
   return {
     state,
     handleSearch,
-    handleSearchV2,
     clearFilters,
     updateSearchInput,
-    performSearch,
     handlePageChange,
   };
 }
 
-// Utility functions
-
+// Utility functions (keeping the same)
 const getPaginationInfo = (searchInput: SearchInput, total: number) => {
   const currentPage = parseInt(searchInput.page || "1");
-  const ITEM_PER_PAGE = process.env.ITEM_PER_PAGE || "10"
+  const ITEM_PER_PAGE = process.env.ITEM_PER_PAGE || "10";
   const itemsPerPage = parseInt(ITEM_PER_PAGE);
   const totalPages = Math.ceil(total / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
@@ -403,9 +406,7 @@ const getPaginationInfo = (searchInput: SearchInput, total: number) => {
   };
 };
 
-const getFundTypeIcon = (
-  fundCompareGroup: string
-): { bg: string; text: string } => {
+const getFundTypeIcon = (fundCompare: string): { bg: string; text: string } => {
   const typeMap = {
     equity: { bg: "bg-red-500", text: "EQ" },
     bond: { bg: "bg-teal-700", text: "FI" },
@@ -414,7 +415,7 @@ const getFundTypeIcon = (
     property: { bg: "bg-blue-600", text: "RT" },
   };
 
-  const type = fundCompareGroup.toLowerCase();
+  const type = fundCompare.toLowerCase();
   for (const [key, value] of Object.entries(typeMap)) {
     if (type.includes(key)) return value;
   }
@@ -430,58 +431,39 @@ const SearchPage = ({ searchParams }: SearchPageProps) => {
   const resultsRef = useRef<HTMLDivElement>(null);
   const params = React.use(searchParams);
 
-  const initialParams = {
-    name: params.name || "",
-    fundCompareGroup: params.fundCompareGroup || "",
-    company: params.company || "",
-    page: params.page || "1", // Add page initialization
-  };
+  const initialParams = useMemo(
+    () => ({
+      name: params.name || "",
+      fundCompare: params.fundCompare || "",
+      company: params.company || "",
+      page: params.page || "1",
+    }),
+    [params]
+  );
 
   const {
     state,
     handleSearch,
-    handleSearchV2,
     clearFilters,
     updateSearchInput,
-    // performSearch,
     handlePageChange,
   } = useSearchFunds(initialParams);
 
+  // Scroll to results effect
   useEffect(() => {
-    // Only scroll if we have results and not on initial load
     if (state.results.data.length > 0 && !state.loading.results) {
-      // Small delay to ensure DOM is updated
-      setTimeout(() => {
+      const timer = setTimeout(() => {
         resultsRef.current?.scrollIntoView({
           behavior: "smooth",
-          block: "start", // Align to top of viewport
+          block: "start",
         });
       }, 100);
+      return () => clearTimeout(timer);
     }
-  }, [state.results.data, state.loading.results]);
+  }, [state.results.data.length, state.loading.results]);
 
-  // Update search input when URL params change and companies are loaded
-  useEffect(() => {
-    if (state.companies.length > 0 && params.company) {
-      // Ensure the company value from URL matches the loaded companies
-      const companyExists = state.companies.some(
-        (c) => c.id === params.company
-      );
-      if (companyExists) {
-        updateSearchInput({ company: params.company });
-      }
-    }
-  }, [state.companies, params.company, updateSearchInput]);
-
-  // Initial search effect
-  useEffect(() => {
-    if (Object.values(initialParams).some(Boolean)) {
-      handleSearchV2();
-    }
-  }, []);
-
-  // Updated pagination component
-  const PaginationComponent = () => {
+  // Pagination component
+  const PaginationComponent = useCallback(() => {
     const paginationInfo = getPaginationInfo(
       state.searchInput,
       state.results.total
@@ -489,15 +471,12 @@ const SearchPage = ({ searchParams }: SearchPageProps) => {
     const { currentPage, totalPages, hasNextPage, hasPrevPage } =
       paginationInfo;
 
-    // Generate page numbers to show (show current page and 2 pages before/after)
     const getVisiblePages = () => {
-      const maxVisible = 5; // Show up to 5 page numbers
+      const maxVisible = 5;
       const half = Math.floor(maxVisible / 2);
-
       let startPage = Math.max(1, currentPage - half);
       let endPage = Math.min(totalPages, currentPage + half);
 
-      // Adjust if we're near the beginning or end
       if (endPage - startPage + 1 < maxVisible) {
         if (startPage === 1) {
           endPage = Math.min(totalPages, startPage + maxVisible - 1);
@@ -513,7 +492,6 @@ const SearchPage = ({ searchParams }: SearchPageProps) => {
     };
 
     const visiblePages = getVisiblePages();
-
     if (totalPages <= 1) return null;
 
     return (
@@ -525,15 +503,10 @@ const SearchPage = ({ searchParams }: SearchPageProps) => {
                 "hover:cursor-pointer",
                 !hasPrevPage && "opacity-50 cursor-not-allowed"
               )}
-              onClick={() => {
-                if (hasPrevPage) {
-                  handlePageChange(currentPage - 1);
-                }
-              }}
+              onClick={() => hasPrevPage && handlePageChange(currentPage - 1)}
             />
           </PaginationItem>
 
-          {/* Show first page if not visible */}
           {visiblePages[0] > 1 && (
             <>
               <PaginationItem>
@@ -552,7 +525,6 @@ const SearchPage = ({ searchParams }: SearchPageProps) => {
             </>
           )}
 
-          {/* Show visible page numbers */}
           {visiblePages.map((pageNum) => (
             <PaginationItem key={pageNum}>
               <PaginationLink
@@ -568,7 +540,6 @@ const SearchPage = ({ searchParams }: SearchPageProps) => {
             </PaginationItem>
           ))}
 
-          {/* Show last page if not visible */}
           {visiblePages[visiblePages.length - 1] < totalPages && (
             <>
               {visiblePages[visiblePages.length - 1] < totalPages - 1 && (
@@ -593,19 +564,15 @@ const SearchPage = ({ searchParams }: SearchPageProps) => {
                 "hover:cursor-pointer",
                 !hasNextPage && "opacity-50 cursor-not-allowed"
               )}
-              onClick={() => {
-                if (hasNextPage) {
-                  handlePageChange(currentPage + 1);
-                }
-              }}
+              onClick={() => hasNextPage && handlePageChange(currentPage + 1)}
             />
           </PaginationItem>
         </PaginationContent>
       </Pagination>
     );
-  };
+  }, [state.searchInput, state.results.total, handlePageChange]);
 
-  // Memoized components
+  // Memoized search box
   const SearchBox = useMemo(
     () => (
       <div className="search-box flex flex-col gap-5 min-w-[390px]">
@@ -684,14 +651,17 @@ const SearchPage = ({ searchParams }: SearchPageProps) => {
                           <SelectLabel>
                             บริษัทหลักทรัพย์จัดการกองทุน
                           </SelectLabel>
-                          {state.companies.map((company) => (
+                          {state.companies.map((company, index) => (
                             <SelectItem
-                              key={company.id}
-                              value={String(company.id)}
+                              key={index}
+                              value={company.compThaiName}
                             >
-                              {company.companyName
-                                .replace("บริษัท หลักทรัพย์จัดการกองทุน", "")
-                                .replace("จำกัด", "")}
+                              {company.compThaiName
+                                .replace("บริษัทหลักทรัพย์จัดการกองทุนรวม", "")
+                                .replace("บริษัทหลักทรัพย์จัดการกองทุน", "")
+                                .replace("จำกัด", "")
+                                .replace("(มหาชน)", "")
+                                .replace("(ประเทศไทย)", "")}
                             </SelectItem>
                           ))}
                         </SelectGroup>
@@ -730,14 +700,14 @@ const SearchPage = ({ searchParams }: SearchPageProps) => {
                         className="[--duration:60s] hover:cursor-pointer"
                       >
                         {state.fundTypes.map((type, index) => {
-                          const icon = getFundTypeIcon(type.fundCompareGroup);
+                          const icon = getFundTypeIcon(type.fundCompare);
                           return (
                             <div
                               key={index}
                               className="flex relative justify-center items-center w-25 h-20 max-w-25 min-w-25 rounded-xl px-2 text-xs text-center font-medium bg-primary/10 border"
                               onClick={() =>
                                 updateSearchInput({
-                                  fundCompareGroup: type.fundCompareGroup,
+                                  fundCompare: type.fundCompare,
                                 })
                               }
                             >
@@ -752,9 +722,9 @@ const SearchPage = ({ searchParams }: SearchPageProps) => {
                                     {icon.text}
                                   </div>
                                 )}
-                                {truncateText(type.fundCompareGroup, 25)}
+                                {truncateText(type.fundCompare, 25)}
                                 <span className="opacity-50">
-                                  {` (${type._count.fundCompareGroup} กอง)`}
+                                  {` (${type._count.fundCompare} กอง)`}
                                 </span>
                               </div>
                             </div>
@@ -767,9 +737,9 @@ const SearchPage = ({ searchParams }: SearchPageProps) => {
 
                     <div className="flex gap-2 justify-end items-center w-full">
                       <Select
-                        value={state.searchInput.fundCompareGroup}
+                        value={state.searchInput.fundCompare}
                         onValueChange={(value) =>
-                          updateSearchInput({ fundCompareGroup: value })
+                          updateSearchInput({ fundCompare: value })
                         }
                       >
                         <SelectTrigger className="w-full bg-primary-foreground">
@@ -779,12 +749,9 @@ const SearchPage = ({ searchParams }: SearchPageProps) => {
                           <SelectGroup>
                             <SelectLabel>ประเภทของกองทุน</SelectLabel>
                             {state.fundTypes.map((type, index) => (
-                              <SelectItem
-                                key={index}
-                                value={type.fundCompareGroup}
-                              >
+                              <SelectItem key={index} value={type.fundCompare}>
                                 {truncateText(
-                                  type.fundCompareGroup,
+                                  type.fundCompare,
                                   window.innerWidth < 400 ? 27 : 100
                                 )}
                               </SelectItem>
@@ -818,7 +785,15 @@ const SearchPage = ({ searchParams }: SearchPageProps) => {
         </div>
       </div>
     ),
-    [state, updateSearchInput, handleSearch, clearFilters]
+    [
+      state.searchInput,
+      state.loading,
+      state.fundTypes,
+      state.companies,
+      updateSearchInput,
+      handleSearch,
+      clearFilters,
+    ]
   );
 
   return (
@@ -833,8 +808,9 @@ const SearchPage = ({ searchParams }: SearchPageProps) => {
 
       {/* Results */}
       <div ref={resultsRef}>
-        <div className="mt-16 mx-auto flex flex-col gap-2 justify-center text-center text-2xl">
+        <div className="mt-8 mx-auto flex flex-col gap-2 justify-center text-center text-2xl">
           ผลการค้นหา <br />
+          <p className="text-base -mt-1 mb-2">ข้อมูลกองทุนและระดับความเสี่ยง</p>
           <p className="text-sm opacity-50">
             พบข้อมูลจำนวน {state.results.total.toLocaleString()} กองทุน
           </p>
@@ -846,20 +822,38 @@ const SearchPage = ({ searchParams }: SearchPageProps) => {
       ) : state.results.data.length === 0 ? (
         <p className="text-center w-full">ไม่มีผลลัพธ์</p>
       ) : (
-        <div className="grid gap-4">
+        <div className="grid md:grid-cols-2 gap-4">
           {state.results.data.map((fund) => (
             <div
               key={fund.id}
               className="border rounded-lg hover:bg-primary-foreground/80 duration-300 group"
             >
               <div
-                onClick={() => redirect(`/search/ffs?url=${fund.urlFactsheet}`)}
-                className="flex justify-between items-center p-4"
+                onClick={() =>
+                  redirect(`/search/detail?name=${fund.projAbbrName}`)
+                }
+                className="flex justify-between items-center p-4 hover:cursor-pointer"
               >
                 <div>
-                  <h3 className="flex gap-2 items-center font-medium">
-                    {fund.projAbbrName}
-                    {fund.investCountryFlag.includes("ไม่มีความเสี่ยง") ? (
+                  <div className="flex gap-2 ">
+                    <h3 className="flex gap-2 items-center font-medium">
+                      {fund.projAbbrName}
+                    </h3>
+
+                    <div className="flex items-center justify-center gap-1 opacity-70">
+                      <div className="text-xs bg-primary-foreground border px-1.5 rounded-md text-primary">
+                        <p>
+                          {fund.compThaiName
+                            .replace("บริษัทหลักทรัพย์จัดการกองทุนรวม", "")
+                            .replace("บริษัทหลักทรัพย์จัดการกองทุน", "")
+                            .replace("จำกัด", "")
+                            .replace("(มหาชน)", "")
+                            .replace("(ประเทศไทย)", "")}
+                        </p>
+                      </div>
+                    </div>
+
+                    {fund.investCountryFlagEng.includes("ไม่มีความเสี่ยง") ? (
                       <></>
                     ) : (
                       <>
@@ -873,28 +867,38 @@ const SearchPage = ({ searchParams }: SearchPageProps) => {
                         </div>
                       </>
                     )}
-                  </h3>
-                  <p className="text-sm text-primary/50">{fund.projNameTh}</p>
+                  </div>
+
+                  <p className="text-sm text-primary/70">{fund.projThaiName}</p>
                 </div>
-                <div className="flex">
-                  <div className="bg-violet-600 bg-indigo-600 bg-sky-500 bg-teal-600 bg-red-500 bg-pink-500 bg-yellow-600 bg-orange-400 hidden"></div>
-                  <div className="w-30 h-10 flex justify-center items-center px-2 bg-primary-foreground rounded-l-lg">
-                    <p className="text-xs">ระดับความเสี่ยง</p>
-                  </div>
-                  <div
-                    className={cn(
-                      "w-10 h-10 flex justify-center items-center px-4 rounded-r-lg",
-                      fund.fundRiskLevelId <= 4
-                        ? `bg-teal-600/75`
-                        : fund.fundRiskLevelId <= 5
-                        ? `bg-yellow-600/75`
-                        : fund.fundRiskLevelId <= 6
-                        ? `bg-red-500/75`
-                        : `bg-violet-600/75`
-                    )}
-                  >
-                    <p className="text-xs">{fund.fundRiskLevelId}</p>
-                  </div>
+                <div className="flex opacity-70">
+                  {!+fund.riskSpectrum.replace("RS", "") ? (
+                    <div className="w-12 h-12 flex justify-center items-center">
+                      <AlertCircle />
+                    </div>
+                  ) : (
+                    <AnimatedCircularProgressBar
+                      max={8}
+                      min={1}
+                      value={
+                        !+fund.riskSpectrum.replace("RS", "")
+                          ? 0
+                          : +fund.riskSpectrum.replace("RS", "")
+                      }
+                      gaugePrimaryColor={
+                        +fund.riskSpectrum.replace("RS", "")
+                          ? +fund.riskSpectrum.replace("RS", "") <= 4
+                            ? "oklch(70.4% 0.14 182.503)"
+                            : +fund.riskSpectrum.replace("RS", "") <= 5
+                            ? "oklch(79.5% 0.184 86.047)"
+                            : +fund.riskSpectrum.replace("RS", "") <= 6
+                            ? "oklch(63.7% 0.237 25.331)"
+                            : "oklch(58.5% 0.233 277.117)"
+                          : "oklch(58.5% 0.233 277.117)"
+                      }
+                      gaugeSecondaryColor="rgba(255, 255, 255, 0.1)"
+                    />
+                  )}
                 </div>
               </div>
             </div>
@@ -907,32 +911,8 @@ const SearchPage = ({ searchParams }: SearchPageProps) => {
       {state.error && (
         <div className="text-red-500 text-center mt-4">{state.error}</div>
       )}
-
-      <div className="lg:basis-1/2 relative h-full md:h-[135px] md:overflow-hidden text-sm opacity-50 p-4">
-        <p className="font-bold">หมายเหตุ</p>
-        <p>
-          - ข้อมูล ณ สิ้นสุดเดิอน ธันวาคม พ.ศ. 2567 <br />
-          - ระยะเวลามากกว่า 1 ปีขึ้นไปจะแสดงในรูปแบบของข้อมูลต่อปี <br />
-          - ข้อมูลที่แสดงทั้งหมดมาจากแหล่งข้อมูลที่น่าเชื่อถือ เช่น สำนักงาน
-          กลต. หรือ เว็บไซต์ของบริษัทหลักทรัพย์จัดการกองทุน เป็นต้น อย่างไรก็ตาม
-          ทางเราไม่รับรองถึงความถูกต้องสมบูรณ์ของข้อมูลดังกล่าว
-          <br />
-        </p>
-      </div>
     </>
   );
 };
 
 export default SearchPage;
-
-// {
-//     "id": 1,
-//     "fundCompareGroup": "Equity General",
-//     "investCountryFlag": "กองทุนที่ลงทุนแบบไม่มีความเสี่ยงต่างประเทศ",
-//     "fundPolicy": "EG",
-//     "urlFactsheet": "https://secdocumentstorage.blob.core.windows.net/fundfactsheet/M0008_2537.pdf",
-//     "projNameTh": "กองทุนเปิดรวงข้าว 4 ",
-//     "projAbbrName": "RKF4",
-//     "companyId": 1,
-//     "fundRiskLevelId": 6
-// }

@@ -4,13 +4,13 @@ import { NextResponse } from "next/server";
 export async function GET() {
 
   try {
-    const result = await prisma.funds.groupBy({
-      by: ['fundCompareGroup'],
+    const result = await prisma.fundDetail.groupBy({
+      by: ['fundCompare'],
       _count: {
-        fundCompareGroup: true,
+        fundCompare: true,
       },
       orderBy: {
-        fundCompareGroup: "asc",
+        fundCompare: "asc",
       },
     });
     return NextResponse.json(result);

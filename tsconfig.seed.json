@@ -9,5 +9,5 @@
       "@/*": ["./*"]
     }
   },
-   "include": ["prisma/**/*.ts", "lib/**/*.ts", "prisma/information/**/*"]
+   "include": ["prisma/**/*.ts", "lib/**/*.ts", "prisma/data/**/*"]
 }

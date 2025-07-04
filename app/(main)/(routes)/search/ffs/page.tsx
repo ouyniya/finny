@@ -2,11 +2,14 @@
 
 import { GlowEffectButton } from "@/components/button/GlowButton";
 import { Globe } from "@/components/magicui/globe";
+import { AlertCircle } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
+import { useState } from "react";
 
 const FfsPage = () => {
+  const [loading, setLoading] = useState("กลับหน้าค้นหากองทุน");
   const searchParams = useSearchParams();
   const url = searchParams.get("url") || "";
 
@@ -24,15 +27,35 @@ const FfsPage = () => {
           />
         </div>
 
-        <div className="flex flex-col gap-2 justify-center items-center text-base text-center">
-          คุณกำลังไปที่
-          <br />
-          <p className="opacity-50 text-sm">{url.substring(0, 45) + "..."}</p>
-        </div>
+        {url.includes("https://www.sec.or.th") ? (
+          <div className="flex gap-2 justify-center items-center">
+            <AlertCircle size={16} />
+            <p>ไม่พบข้อมูลหนังสือชี้ชวนของกองทุนนี้</p>
+          </div>
+        ) : (
+          <>
+            <div className="flex flex-col gap-2 justify-center items-center text-base text-center">
+              กำลังพาคุณไปที่
+              <br />
+              <p className="opacity-50 text-sm">
+                {url.substring(0, 45) + "..."}
+              </p>
+            </div>
+          </>
+        )}
       </div>
       <GlowEffectButton>
-        <Link href="/search" className="link">
-          <p className="text-base">กลับหน้าค้นหากองทุน</p>
+        <Link
+          href="/search"
+          className="link"
+          onClick={() => {
+            setLoading("กำลังเปลี่ยนหน้า...");
+            setTimeout(() => {
+              setLoading("เกิดข้อผิดพลาด กรุณาโหลดหน้านี้ใหม่");
+            }, 5000);
+          }}
+        >
+          {loading}
         </Link>
       </GlowEffectButton>
       <object data={url} type="application/pdf" width="100%"></object>
