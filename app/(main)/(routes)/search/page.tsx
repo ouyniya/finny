@@ -1,6 +1,6 @@
 "use client";
 
-import { redirect, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import React, {
   useCallback,
   useRef,
@@ -36,7 +36,7 @@ import { cn } from "@/lib/utils";
 import Image from "next/image";
 import { AlertCircle, Globe, Trash } from "lucide-react";
 
-// Types (keeping the same interfaces)
+// Types
 interface FundProps {
   id: number;
   asOfDate: string;
@@ -108,12 +108,14 @@ interface SearchInput {
   page: string;
 }
 
+// Loading state management
 interface LoadingState {
   fundTypes: boolean;
   companies: boolean;
   results: boolean;
 }
 
+// State management with useReducer
 interface AppState {
   fundTypes: FundType[];
   companies: Company[];
@@ -121,9 +123,9 @@ interface AppState {
   searchInput: SearchInput;
   loading: LoadingState;
   error: string;
-  initialized: boolean; // Add this to track initialization
 }
 
+// Component Props
 interface SearchPageProps {
   searchParams: Promise<SearchInput>;
 }
@@ -135,10 +137,9 @@ type AppAction =
   | { type: "SET_SEARCH_INPUT"; payload: Partial<SearchInput> }
   | { type: "SET_LOADING"; payload: Partial<LoadingState> }
   | { type: "SET_ERROR"; payload: string }
-  | { type: "SET_INITIALIZED"; payload: boolean }
   | { type: "CLEAR_FILTERS" };
 
-// API Service Class (keeping the same)
+// API Service Class
 class FundSearchService {
   private static instance: FundSearchService;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -171,7 +172,9 @@ class FundSearchService {
     const response = await fetch(url);
 
     if (!response.ok) {
-      throw new Error(`API error: ${response.status}`);
+      const errorData = await response.json().catch(() => ({}));
+      const message = errorData?.error || `API error: ${response.status}`;
+      throw new Error(message);
     }
 
     const data = await response.json();
@@ -198,7 +201,7 @@ class FundSearchService {
   }
 }
 
-// Updated reducer function
+// Reducer function
 function appReducer(state: AppState, action: AppAction): AppState {
   switch (action.type) {
     case "SET_FUND_TYPES":
@@ -228,8 +231,6 @@ function appReducer(state: AppState, action: AppAction): AppState {
       return { ...state, loading: { ...state.loading, ...action.payload } };
     case "SET_ERROR":
       return { ...state, error: action.payload };
-    case "SET_INITIALIZED":
-      return { ...state, initialized: action.payload };
     case "CLEAR_FILTERS":
       return {
         ...state,
@@ -247,14 +248,10 @@ function appReducer(state: AppState, action: AppAction): AppState {
   }
 }
 
-// Updated custom hook
+// Custom hook for search functionality
 function useSearchFunds(initialParams: SearchInput) {
   const router = useRouter();
   const service = useMemo(() => FundSearchService.getInstance(), []);
-  const hasInitialSearch = useMemo(
-    () => Object.values(initialParams).some((value) => value && value !== "1"),
-    [initialParams]
-  );
 
   const initialState: AppState = {
     fundTypes: [],
@@ -263,63 +260,151 @@ function useSearchFunds(initialParams: SearchInput) {
     searchInput: initialParams,
     loading: { fundTypes: true, companies: true, results: false },
     error: "",
-    initialized: false,
   };
 
   const [state, dispatch] = useReducer(appReducer, initialState);
 
-  // Single initialization effect
+  // Fetch initial data
   useEffect(() => {
-    let isMounted = true;
-
-    const initialize = async () => {
+    const fetchInitialData = async () => {
       try {
         const [fundTypes, companies] = await Promise.all([
           service.getFundTypes(),
           service.getCompanies(),
         ]);
 
-        if (!isMounted) return;
-
         dispatch({ type: "SET_FUND_TYPES", payload: fundTypes });
         dispatch({ type: "SET_COMPANIES", payload: companies });
-        dispatch({ type: "SET_INITIALIZED", payload: true });
 
-        // Only perform initial search if there are search parameters
-        if (hasInitialSearch) {
-          dispatch({ type: "SET_LOADING", payload: { results: true } });
-          const results = await service.searchFunds(initialParams);
-          if (isMounted) {
-            dispatch({ type: "SET_RESULTS", payload: results });
-          }
-        }
+        // After companies are loaded, validate the initial company parameter
+        // if (initialParams.company) {
+        //   const companyExists = companies.some(
+        //     (c) => +c.compThaiName === +initialParams.company
+        //   );
+        //   if (!companyExists) {
+        //     // If company doesn't exist, clear the company filter
+        //     dispatch({ type: "SET_SEARCH_INPUT", payload: { company: "" } });
+        //   }
+        // }
       } catch (error) {
-        if (isMounted) {
-          const errorMessage =
-            error instanceof Error ? error.message : "Unknown error occurred";
-          dispatch({ type: "SET_ERROR", payload: errorMessage });
-          dispatch({
-            type: "SET_LOADING",
-            payload: { fundTypes: false, companies: false, results: false },
-          });
-        }
+        const errorMessage =
+          error instanceof Error ? error.message : "Unknown error occurred";
+        dispatch({ type: "SET_ERROR", payload: errorMessage });
+        dispatch({
+          type: "SET_LOADING",
+          payload: { fundTypes: false, companies: false },
+        });
       }
     };
 
-    initialize();
+    fetchInitialData();
+  }, [service, initialParams.company]);
 
-    return () => {
-      isMounted = false;
+  // Search function
+  const performSearch = useCallback(async () => {
+    dispatch({ type: "SET_LOADING", payload: { results: true } });
+    dispatch({ type: "SET_ERROR", payload: "" });
+
+    try {
+      const results = await service.searchFunds(state.searchInput);
+      dispatch({ type: "SET_RESULTS", payload: results });
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : "Unknown error occurred";
+      dispatch({ type: "SET_ERROR", payload: errorMessage });
+      dispatch({ type: "SET_RESULTS", payload: { data: [], total: 0 } });
+    }
+  }, [service, state.searchInput]);
+
+  // Update URL and perform search
+  const handleSearchV2 = useCallback(() => {
+    const params = new URLSearchParams();
+    // Calculate skip based on current page
+
+    // Update search input with calculated skip
+    const searchInputWithSkip = {
+      ...state.searchInput,
     };
-  }, []); // Empty dependency array - only run once
 
-  const performSearch = useCallback(
-    async (searchParams: SearchInput) => {
+    Object.entries(searchInputWithSkip).forEach(([key, value]) => {
+      if (value && key !== "page") params.set(key, value);
+    });
+
+    // Always include page in URL
+    if (state.searchInput.page) {
+      params.set("page", state.searchInput.page);
+    }
+
+    router.push(`?${params.toString()}`);
+    performSearch();
+  }, [state.searchInput, router, performSearch]);
+
+  // Clear filters
+  const clearFilters = useCallback(() => {
+    dispatch({ type: "CLEAR_FILTERS" });
+    router.push("?");
+  }, [router]);
+
+  // Update search input
+  const updateSearchInput = useCallback((updates: Partial<SearchInput>) => {
+    dispatch({ type: "SET_SEARCH_INPUT", payload: updates });
+  }, []);
+
+  // Update URL and perform search
+  const handleSearch = useCallback(() => {
+    // Create the new search input object
+    const newSearchInput = {
+      ...state.searchInput,
+      page: "1",
+    };
+
+    // Update the state
+    updateSearchInput(newSearchInput);
+
+    // Immediately search with the NEW values (not waiting for state update)
+    performSearchWithParams(newSearchInput);
+  }, [state.searchInput, updateSearchInput]);
+
+  const handlePageChange = useCallback(
+    (newPage: number) => {
+      // Create the new search input object
+      const newSearchInput = {
+        ...state.searchInput,
+        page: newPage.toString(),
+      };
+
+      // Update the state
+      updateSearchInput({
+        page: newPage.toString(),
+      });
+
+      // Immediately search with the NEW values (not waiting for state update)
+      performSearchWithParams(newSearchInput);
+    },
+    [state.searchInput, updateSearchInput]
+  );
+
+  const performSearchWithParams = useCallback(
+    async (searchInput: SearchInput) => {
       dispatch({ type: "SET_LOADING", payload: { results: true } });
       dispatch({ type: "SET_ERROR", payload: "" });
 
       try {
-        const results = await service.searchFunds(searchParams);
+        // Update URL
+        const params = new URLSearchParams();
+
+        Object.entries(searchInput).forEach(([key, value]) => {
+          if (value && key !== "page") params.set(key, value);
+        });
+
+        if (searchInput.page) {
+          params.set("page", searchInput.page);
+        }
+
+        router.push(`?${params}`);
+
+        // Perform search with the provided parameters
+        const results = await service.searchFunds(searchInput);
         dispatch({ type: "SET_RESULTS", payload: results });
       } catch (error) {
         const errorMessage =
@@ -328,67 +413,22 @@ function useSearchFunds(initialParams: SearchInput) {
         dispatch({ type: "SET_RESULTS", payload: { data: [], total: 0 } });
       }
     },
-    [service]
+    [service, router]
   );
-
-  const updateSearchInput = useCallback((updates: Partial<SearchInput>) => {
-    dispatch({ type: "SET_SEARCH_INPUT", payload: updates });
-  }, []);
-
-  const handleSearch = useCallback(() => {
-    const newSearchInput = {
-      ...state.searchInput,
-      page: "1",
-    };
-
-    updateSearchInput({ page: "1" });
-
-    const params = new URLSearchParams();
-    Object.entries(newSearchInput).forEach(([key, value]) => {
-      if (value && key !== "page") params.set(key, value);
-    });
-    if (newSearchInput.page) params.set("page", newSearchInput.page);
-
-    router.push(`?${params.toString()}`);
-    performSearch(newSearchInput);
-  }, [state.searchInput, updateSearchInput, router, performSearch]);
-
-  const handlePageChange = useCallback(
-    (newPage: number) => {
-      const newSearchInput = {
-        ...state.searchInput,
-        page: newPage.toString(),
-      };
-
-      updateSearchInput({ page: newPage.toString() });
-
-      const params = new URLSearchParams();
-      Object.entries(newSearchInput).forEach(([key, value]) => {
-        if (value && key !== "page") params.set(key, value);
-      });
-      if (newSearchInput.page) params.set("page", newSearchInput.page);
-
-      router.push(`?${params.toString()}`);
-      performSearch(newSearchInput);
-    },
-    [state.searchInput, updateSearchInput, router, performSearch]
-  );
-
-  const clearFilters = useCallback(() => {
-    dispatch({ type: "CLEAR_FILTERS" });
-    router.push("?");
-  }, [router]);
 
   return {
     state,
     handleSearch,
+    handleSearchV2,
     clearFilters,
     updateSearchInput,
+    performSearch,
     handlePageChange,
   };
 }
 
-// Utility functions (keeping the same)
+// Utility functions
+
 const getPaginationInfo = (searchInput: SearchInput, total: number) => {
   const currentPage = parseInt(searchInput.page || "1");
   const ITEM_PER_PAGE = process.env.ITEM_PER_PAGE || "10";
@@ -431,39 +471,58 @@ const SearchPage = ({ searchParams }: SearchPageProps) => {
   const resultsRef = useRef<HTMLDivElement>(null);
   const params = React.use(searchParams);
 
-  const initialParams = useMemo(
-    () => ({
-      name: params.name || "",
-      fundCompare: params.fundCompare || "",
-      company: params.company || "",
-      page: params.page || "1",
-    }),
-    [params]
-  );
+  const initialParams = {
+    name: params.name || "",
+    fundCompare: params.fundCompare || "",
+    company: params.company || "",
+    page: params.page || "1", // Add page initialization
+  };
 
   const {
     state,
     handleSearch,
+    handleSearchV2,
     clearFilters,
     updateSearchInput,
+    // performSearch,
     handlePageChange,
   } = useSearchFunds(initialParams);
 
-  // Scroll to results effect
   useEffect(() => {
+    // Only scroll if we have results and not on initial load
     if (state.results.data.length > 0 && !state.loading.results) {
-      const timer = setTimeout(() => {
+      // Small delay to ensure DOM is updated
+      setTimeout(() => {
         resultsRef.current?.scrollIntoView({
           behavior: "smooth",
-          block: "start",
+          block: "start", // Align to top of viewport
         });
       }, 100);
-      return () => clearTimeout(timer);
     }
-  }, [state.results.data.length, state.loading.results]);
+  }, [state.results.data, state.loading.results]);
 
-  // Pagination component
-  const PaginationComponent = useCallback(() => {
+  // Update search input when URL params change and companies are loaded
+  useEffect(() => {
+    if (state.companies.length > 0 && params.company) {
+      // Ensure the company value from URL matches the loaded companies
+      const companyExists = state.companies.some(
+        (c) => c.compThaiName === params.company
+      );
+      if (companyExists) {
+        updateSearchInput({ company: params.company });
+      }
+    }
+  }, [state.companies, params.company, updateSearchInput]);
+
+  // Initial search effect
+  useEffect(() => {
+    if (Object.values(initialParams).some(Boolean)) {
+      handleSearchV2();
+    }
+  }, []);
+
+  // Updated pagination component
+  const PaginationComponent = () => {
     const paginationInfo = getPaginationInfo(
       state.searchInput,
       state.results.total
@@ -471,12 +530,15 @@ const SearchPage = ({ searchParams }: SearchPageProps) => {
     const { currentPage, totalPages, hasNextPage, hasPrevPage } =
       paginationInfo;
 
+    // Generate page numbers to show (show current page and 2 pages before/after)
     const getVisiblePages = () => {
-      const maxVisible = 5;
+      const maxVisible = 5; // Show up to 5 page numbers
       const half = Math.floor(maxVisible / 2);
+
       let startPage = Math.max(1, currentPage - half);
       let endPage = Math.min(totalPages, currentPage + half);
 
+      // Adjust if we're near the beginning or end
       if (endPage - startPage + 1 < maxVisible) {
         if (startPage === 1) {
           endPage = Math.min(totalPages, startPage + maxVisible - 1);
@@ -492,6 +554,7 @@ const SearchPage = ({ searchParams }: SearchPageProps) => {
     };
 
     const visiblePages = getVisiblePages();
+
     if (totalPages <= 1) return null;
 
     return (
@@ -503,10 +566,15 @@ const SearchPage = ({ searchParams }: SearchPageProps) => {
                 "hover:cursor-pointer",
                 !hasPrevPage && "opacity-50 cursor-not-allowed"
               )}
-              onClick={() => hasPrevPage && handlePageChange(currentPage - 1)}
+              onClick={() => {
+                if (hasPrevPage) {
+                  handlePageChange(currentPage - 1);
+                }
+              }}
             />
           </PaginationItem>
 
+          {/* Show first page if not visible */}
           {visiblePages[0] > 1 && (
             <>
               <PaginationItem>
@@ -525,6 +593,7 @@ const SearchPage = ({ searchParams }: SearchPageProps) => {
             </>
           )}
 
+          {/* Show visible page numbers */}
           {visiblePages.map((pageNum) => (
             <PaginationItem key={pageNum}>
               <PaginationLink
@@ -540,6 +609,7 @@ const SearchPage = ({ searchParams }: SearchPageProps) => {
             </PaginationItem>
           ))}
 
+          {/* Show last page if not visible */}
           {visiblePages[visiblePages.length - 1] < totalPages && (
             <>
               {visiblePages[visiblePages.length - 1] < totalPages - 1 && (
@@ -564,15 +634,19 @@ const SearchPage = ({ searchParams }: SearchPageProps) => {
                 "hover:cursor-pointer",
                 !hasNextPage && "opacity-50 cursor-not-allowed"
               )}
-              onClick={() => hasNextPage && handlePageChange(currentPage + 1)}
+              onClick={() => {
+                if (hasNextPage) {
+                  handlePageChange(currentPage + 1);
+                }
+              }}
             />
           </PaginationItem>
         </PaginationContent>
       </Pagination>
     );
-  }, [state.searchInput, state.results.total, handlePageChange]);
+  };
 
-  // Memoized search box
+  // Memoized components
   const SearchBox = useMemo(
     () => (
       <div className="search-box flex flex-col gap-5 min-w-[390px]">
@@ -639,9 +713,9 @@ const SearchPage = ({ searchParams }: SearchPageProps) => {
                   <div className="flex flex-col md:flex-row gap-2 items-end">
                     <Select
                       value={state.searchInput.company}
-                      onValueChange={(value) =>
-                        updateSearchInput({ company: value })
-                      }
+                      onValueChange={(value) => {
+                        updateSearchInput({ company: value });
+                      }}
                     >
                       <SelectTrigger className="w-full bg-primary-foreground text-xs">
                         <SelectValue placeholder="บริษัทหลักทรัพย์จัดการกองทุน" />
@@ -651,19 +725,26 @@ const SearchPage = ({ searchParams }: SearchPageProps) => {
                           <SelectLabel>
                             บริษัทหลักทรัพย์จัดการกองทุน
                           </SelectLabel>
-                          {state.companies.map((company, index) => (
-                            <SelectItem
-                              key={index}
-                              value={company.compThaiName}
-                            >
-                              {company.compThaiName
-                                .replace("บริษัทหลักทรัพย์จัดการกองทุนรวม", "")
-                                .replace("บริษัทหลักทรัพย์จัดการกองทุน", "")
-                                .replace("จำกัด", "")
-                                .replace("(มหาชน)", "")
-                                .replace("(ประเทศไทย)", "")}
-                            </SelectItem>
-                          ))}
+                          {state.companies.map((company, index) => {
+                            if (company._count.compThaiName === 0) {
+                            }
+                            return (
+                              <SelectItem
+                                key={index}
+                                value={company.compThaiName}
+                              >
+                                {company.compThaiName
+                                  .replace(
+                                    "บริษัทหลักทรัพย์จัดการกองทุนรวม",
+                                    ""
+                                  )
+                                  .replace("บริษัทหลักทรัพย์จัดการกองทุน", "")
+                                  .replace("จำกัด", "")
+                                  .replace("(มหาชน)", "")
+                                  .replace("(ประเทศไทย)", "")}
+                              </SelectItem>
+                            );
+                          })}
                         </SelectGroup>
                       </SelectContent>
                     </Select>
@@ -785,15 +866,7 @@ const SearchPage = ({ searchParams }: SearchPageProps) => {
         </div>
       </div>
     ),
-    [
-      state.searchInput,
-      state.loading,
-      state.fundTypes,
-      state.companies,
-      updateSearchInput,
-      handleSearch,
-      clearFilters,
-    ]
+    [state, updateSearchInput, handleSearch, clearFilters]
   );
 
   return (
@@ -817,7 +890,9 @@ const SearchPage = ({ searchParams }: SearchPageProps) => {
         </div>
       </div>
 
-      {state.loading.results ? (
+      {state.error ? (
+        <div className="text-red-500 text-center mt-4">{state.error}</div>
+      ) : state.loading.results ? (
         <Loading cn="w-full max-h-[50px]" />
       ) : state.results.data.length === 0 ? (
         <p className="text-center w-full">ไม่มีผลลัพธ์</p>
@@ -830,7 +905,11 @@ const SearchPage = ({ searchParams }: SearchPageProps) => {
             >
               <div
                 onClick={() =>
-                  redirect(`/search/detail?name=${fund.projAbbrName}`)
+                  window.open(
+                    `/search/detail?name=${fund.projAbbrName}`,
+                    "_blank",
+                    "noopener,noreferrer"
+                  )
                 }
                 className="flex justify-between items-center p-4 hover:cursor-pointer"
               >
@@ -907,10 +986,6 @@ const SearchPage = ({ searchParams }: SearchPageProps) => {
       )}
 
       {state.results.total > 0 && <PaginationComponent />}
-
-      {state.error && (
-        <div className="text-red-500 text-center mt-4">{state.error}</div>
-      )}
     </>
   );
 };

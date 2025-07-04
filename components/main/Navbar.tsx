@@ -33,17 +33,17 @@ const Navbar = () => {
 
                   <SignOutButton>
                     <button className="hover:cursor-pointer hover:text-primary hover:text-shadow-[0_0px_16px_rgb(255_0_0_/_1)] hover:text-shadow-red-500 duration-300">
-                      Logout
+                      ออกจากระบบ
                     </button>
                   </SignOutButton>
                 </>
               ) : (
                 <>
                   <SignInButton>
-                    <button className="link">Login</button>
+                    <button className="link">เข้าสู่ระบบ</button>
                   </SignInButton>
                   <SignUpButton>
-                    <button className="link">Register</button>
+                    <button className="link">สมัครสมาชิก</button>
                   </SignUpButton>
                 </>
               )}

@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { checkRateLimit } from "@/lib/rateLimiter";
 import { NextResponse } from "next/server";
 
 export async function GET(req: Request) {
@@ -21,6 +22,20 @@ export async function GET(req: Request) {
     dividend: dividend,
     mutualInvType: mutualInvType,
   };
+
+ // rate limit
+  const ip = req.headers.get("x-forwarded-for") || "unknown";
+
+  const rateLimitResult = checkRateLimit(ip);
+
+  if (!rateLimitResult.allowed) {
+    return NextResponse.json(
+      {
+        error: `🌸 แง้ว... มีการเข้ามาบ่อยเกินไปน้า! ขอพักอีก ${rateLimitResult.remainingTime} วินาที นะคะ 🐾`,
+      },
+      { status: 429 }
+    );
+  }
 
   try {
     const [data, total] = await Promise.all([

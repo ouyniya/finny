@@ -19,7 +19,7 @@ export function AnimatedCircularProgressBar({
 }: AnimatedCircularProgressBarProps) {
   const circumference = 2 * Math.PI * 45;
   const percentPx = circumference / max + min;
-  const currentPercent = Math.round(value);
+  const currentPercent = Math.round(value) > max ? "8+" : Math.round(value);
 
   return (
     <div
@@ -45,31 +45,36 @@ export function AnimatedCircularProgressBar({
         strokeWidth="2"
         viewBox="0 0 100 100"
       >
-        {currentPercent <= 90 && currentPercent >= 0 && (
-          <circle
-            cx="50"
-            cy="50"
-            r="45"
-            strokeWidth="10"
-            strokeDashoffset="0"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            className=" opacity-100"
-            style={
-              {
-                stroke: gaugeSecondaryColor,
-                "--stroke-percent": 90 - currentPercent,
-                "--offset-factor-secondary": "calc(1 - var(--offset-factor))",
-                strokeDasharray:
-                  "calc(var(--stroke-percent) * var(--percent-to-px)) var(--circumference)",
-                transform:
-                  "rotate(calc(1turn - 90deg - (var(--gap-percent) * var(--percent-to-deg) * var(--offset-factor-secondary)))) scaleY(-1)",
-                transition: "all var(--transition-length) ease var(--delay)",
-                transformOrigin:
-                  "calc(var(--circle-size) / 2) calc(var(--circle-size) / 2)",
-              } as React.CSSProperties
-            }
-          />
+        {currentPercent !== "8+" ? (
+          currentPercent <= 90 &&
+          currentPercent >= 0 && (
+            <circle
+              cx="50"
+              cy="50"
+              r="45"
+              strokeWidth="10"
+              strokeDashoffset="0"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className=" opacity-100"
+              style={
+                {
+                  stroke: gaugeSecondaryColor,
+                  "--stroke-percent": 90 - currentPercent,
+                  "--offset-factor-secondary": "calc(1 - var(--offset-factor))",
+                  strokeDasharray:
+                    "calc(var(--stroke-percent) * var(--percent-to-px)) var(--circumference)",
+                  transform:
+                    "rotate(calc(1turn - 90deg - (var(--gap-percent) * var(--percent-to-deg) * var(--offset-factor-secondary)))) scaleY(-1)",
+                  transition: "all var(--transition-length) ease var(--delay)",
+                  transformOrigin:
+                    "calc(var(--circle-size) / 2) calc(var(--circle-size) / 2)",
+                } as React.CSSProperties
+              }
+            />
+          )
+        ) : (
+         <></>
         )}
         <circle
           cx="50"

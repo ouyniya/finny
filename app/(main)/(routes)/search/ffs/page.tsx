@@ -27,7 +27,7 @@ const FfsPage = () => {
           />
         </div>
 
-        {url.includes("https://www.sec.or.th") ? (
+        {url.includes("https://www.sec.or.th") || url.length <= 10 ? (
           <div className="flex gap-2 justify-center items-center">
             <AlertCircle size={16} />
             <p>ไม่พบข้อมูลหนังสือชี้ชวนของกองทุนนี้</p>
