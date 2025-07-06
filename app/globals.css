@@ -94,8 +94,8 @@ body,
     }
   }
   @keyframes gradient {
-  to {
-    background-position: var(--bg-size, 300%) 0;
+    to {
+      background-position: var(--bg-size, 300%) 0;
     }
   }
 }
@@ -137,6 +137,9 @@ body,
 @layer base {
   * {
     @apply border-border outline-ring/50;
+  }
+  ::selection {
+    @apply text-white bg-indigo-500;
   }
   body {
     @apply bg-background text-foreground;

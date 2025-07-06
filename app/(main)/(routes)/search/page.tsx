@@ -952,8 +952,9 @@ const SearchPage = ({ searchParams }: SearchPageProps) => {
                 </div>
                 <div className="flex opacity-70">
                   {!+fund.riskSpectrum.replace("RS", "") ? (
-                    <div className="w-12 h-12 flex justify-center items-center">
-                      <AlertCircle />
+                    <div className="flex gap-1 justify-center items-center">
+                      <AlertCircle size={16} />
+                      <p className="text-sm">ไม่มีข้อมูล</p>
                     </div>
                   ) : (
                     <AnimatedCircularProgressBar

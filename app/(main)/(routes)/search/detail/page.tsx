@@ -446,6 +446,31 @@ const NoDataDisplay = memo(
 
 NoDataDisplay.displayName = "NoDataDisplay";
 
+const getFundType = (riskSpectrum: string | number): string => {
+  switch (riskSpectrum) {
+    case 1:
+      return "กองทุนรวมตลาดเงินในประเทศ";
+    case 2:
+      return "กองทุนรวมตลาดเงินทั้งในและต่างประเทศ";
+    case 3:
+      return "กองทุนรวมพันธบัตรรัฐบาล";
+    case 4:
+      return "กองทุนรวมตราสารหนี้";
+    case 5:
+      return "กองทุนรวมตราสารหนี้ และ กองทุนรวมผสม";
+    case 6:
+      return "กองทุนรวมตราสารหนี้ กองทุนรวมผสม หรือ กองทุนรวมหุ้น";
+    case 7:
+      return "กองทุนรวมหุ้นหมวดอุตสาหกรรม";
+    case 8:
+      return "กองทุนรวมที่ลงทุนในสินทรัพย์ทางเลือก";
+    case 81:
+      return "กองทุนรวมที่มีความเสี่ยงจากการลงทุนอย่างมีนัยสำคัญ";
+    default:
+      return "ไม่พบข้อมูลประเภทกองทุน";
+  }
+};
+
 const RiskDisplay = memo(
   ({
     riskValue,
@@ -474,15 +499,16 @@ const RiskDisplay = memo(
           <p className="text-red-500">ไม่พบข้อมูลระดับความเสี่ยง</p>
         )}
         <div className="flex flex-col gap-1">
+          <p className="text-sm text-center mb-2">{getFundType(riskValue)}</p>
           <p className="text-sm opacity-50">ความเสี่ยงต่างประเทศ</p>
           <p className="text-sm">{data?.investCountryFlagEng}</p>
-          <p className="text-sm">
-            <span className="opacity-50">การป้องกันความเสี่ยงต่างประเทศ:</span>{" "}
-            {data?.futureReason === "Hedging"
-              ? "มี"
-              : data?.futureReason === "-"
-              ? "ไม่มีข้อมูล"
-              : "ไม่มี"}
+          <p className="text-sm opacity-50">เพิ่มเติม</p>
+          <p className="text-sm text-indigo-500">
+            {data?.policySpecDesc.includes(
+              "กองทุนรวมที่มีความเสี่ยงสูงหรือมีความซับซ้อน"
+            )
+              ? "** กองทุนรวมที่มีความเสี่ยงสูงหรือมีความซับซ้อน"
+              : "-"}
           </p>
         </div>
       </CardContent>
@@ -634,7 +660,7 @@ const DetailPage = () => {
                       </td>
                     </tr>
                     <tr className="flex gap-2 justify-between items-start">
-                      <td className="opacity-50">หนังสือชี้ชวน</td>
+                      <td className="opacity-50">หนังสือชี้ชวนส่วนสรุปข้อมูลสำคัญ</td>
                       <td className="text-right max-w-3/4">
                         {state.results?.fundFactSheet?.url_factsheet ? (
                           <Link
@@ -770,7 +796,7 @@ const DetailPage = () => {
                 <div>ไม่พบข้อมูล</div>
               ) : (
                 <>
-                  <div className="max-w-[300px] md:max-w-full">
+                  <div className="md:max-w-full">
                     <Suspense
                       fallback={<div>กำลังโหลดตารางผลการดำเนินงาน...</div>}
                     >
@@ -788,7 +814,7 @@ const DetailPage = () => {
                     วันที่จดทะเบียนกองทุน {state.results?.data?.regisDate}
                     <br />
                     ข้อมูลหน่วยเป็น %<br />
-                    ข้อมูลสิ้นสุดวันที่
+                    ข้อมูลสิ้นสุดวันที่{" "}
                     {formatThaiDate(
                       state.results?.performance[0]?.as_of_date.substring(0, 10)
                     )}
