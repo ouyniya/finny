@@ -1,6 +1,6 @@
 import { Bento } from "@/components/main/Bento";
 import Faq from "@/components/main/Faq";
-import Header from "@/components/main/Header";
+import Header from "@/components/common/Header";
 import Hero from "@/components/main/Hero";
 import Tester from "@/components/main/Tester";
 

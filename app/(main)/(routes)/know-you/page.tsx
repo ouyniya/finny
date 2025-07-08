@@ -1,12 +1,12 @@
 "use client";
 
-import Header from "@/components/main/Header";
-import { BentoCard, BentoGrid } from "@/components/magicui/bento-grid";
-import { Marquee } from "@/components/magicui/marquee";
+import Header from "@/components/common/Header";
+import { BentoCard, BentoGrid } from "@/components/ui/magicui/bento-grid";
+import { Marquee } from "@/components/ui/magicui/marquee";
 import { cn } from "@/lib/utils";
 import { MagicWandIcon, HeartIcon } from "@radix-ui/react-icons";
 import Image from "next/image";
-import { OrbitingCircles } from "@/components/magicui/orbiting-circles";
+import { OrbitingCircles } from "@/components/ui/magicui/orbiting-circles";
 // import GradientText from "@/components/text/GradientText";
 // import Link from "next/link";
 

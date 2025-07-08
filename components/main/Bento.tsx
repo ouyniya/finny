@@ -6,8 +6,8 @@ import {
   InputIcon,
 } from "@radix-ui/react-icons";
 
-import { BentoCard, BentoGrid } from "@/components/magicui/bento-grid";
-import { Marquee } from "@/components/magicui/marquee";
+import { BentoCard, BentoGrid } from "@/components/ui/magicui/bento-grid";
+import { Marquee } from "@/components/ui/magicui/marquee";
 import { cn } from "@/lib/utils";
 
 const files = [

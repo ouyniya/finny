@@ -9,10 +9,10 @@ import React, {
   useReducer,
 } from "react";
 import Loading from "@/app/loading";
-import Header from "@/components/main/Header";
+import Header from "@/components/common/Header";
 import { Button } from "@/components/ui/button";
-import { Marquee } from "@/components/magicui/marquee";
-import { AnimatedCircularProgressBar } from "@/components/magicui/animated-circular-progress-bar";
+import { Marquee } from "@/components/ui/magicui/marquee";
+import { AnimatedCircularProgressBar } from "@/components/ui/magicui/animated-circular-progress-bar";
 
 import {
   Pagination,

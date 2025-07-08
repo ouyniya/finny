@@ -1,7 +1,7 @@
 "use client";
 
-import { GlowEffectButton } from "@/components/button/GlowButton";
-import { Globe } from "@/components/magicui/globe";
+import { GlowEffectButton } from "@/components/ui/GlowButton";
+import { Globe } from "@/components/ui/magicui/globe";
 import { AlertCircle } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";

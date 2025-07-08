@@ -1,4 +1,4 @@
-import { GlowEffectButton } from "@/components/button/GlowButton";
+import { GlowEffectButton } from "@/components/ui/GlowButton";
 import { Blocks, ChevronRight } from "lucide-react";
 import { TextLoopBasic } from "@/components/text/TextLoopBasic";
 import GradientText from "@/components/text/GradientText";

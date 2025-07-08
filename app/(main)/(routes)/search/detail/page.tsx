@@ -1,6 +1,6 @@
 "use client";
 
-import Header from "@/components/main/Header";
+import Header from "@/components/common/Header";
 import { AlertCircle, Loader } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import {
@@ -21,10 +21,10 @@ import React, {
   lazy,
   Suspense,
 } from "react";
-import { AnimatedCircularProgressBar } from "@/components/magicui/animated-circular-progress-bar";
-import { GlowEffectButton } from "@/components/button/GlowButton";
+import { AnimatedCircularProgressBar } from "@/components/ui/magicui/animated-circular-progress-bar";
+import { GlowEffectButton } from "@/components/ui/GlowButton";
 import { cn } from "@/lib/utils";
-import { AnimatedGradientText } from "@/components/magicui/animated-gradient-text";
+import { AnimatedGradientText } from "@/components/ui/magicui/animated-gradient-text";
 import { ChevronRight } from "lucide-react";
 
 import Link from "next/link";
