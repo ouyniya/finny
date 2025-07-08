@@ -1,3 +1,5 @@
+import { FormData } from "@/types/retire";
+
 export const initialMarketDataInputs = [
   {
     id: "asset-1",
@@ -46,15 +48,13 @@ export const INITIAL_COLORS = [
 export const GAMES = [
   {
     title: "เกมส์จัดพอร์ต",
-    content:
-      "คำนวณและหาพอร์ตลงทุนที่เหมาะสม",
+    content: "คำนวณและหาพอร์ตลงทุนที่เหมาะสม",
     link: "/game/portfolio",
     url: "/images/game/investicon.jpg",
   },
   {
     title: "เกมส์วางแผนเกษียณ",
-    content:
-      "สร้างอนาคตที่มั่นคงด้วยการวางแผนที่ดี",
+    content: "สร้างอนาคตที่มั่นคงด้วยการวางแผนที่ดี",
     link: "/game/retire",
     url: "/images/game/retireicon.jpg",
   },
@@ -73,3 +73,16 @@ export const GAMES = [
     url: "/images/game/investicon.jpg",
   },
 ];
+
+export const INITIAL_RETIREMENT_DATA:FormData = {
+  age: 30,
+  salary: 30000,
+  saving: 15000,
+  retireAge: 60,
+  lifestyle: "medium",
+  portfolio: {
+    stock: 60,
+    bond: 30,
+    cash: 10,
+  },
+};

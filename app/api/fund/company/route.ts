@@ -1,3 +1,27 @@
+/**
+ * @swagger
+ * /api/fund/company:
+ *   get:
+ *     summary: Get company details
+ *     description: Retrieve details for a specific company.
+ *     responses:
+ *       200:
+ *         description: Successful response
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   compThaiName:
+ *                     type: string
+ *                   _count:
+ *                     type: object
+ *                     properties:
+ *                       compThaiName:
+ *                         type: integer
+ */
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 

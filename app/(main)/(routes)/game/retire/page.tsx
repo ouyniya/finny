@@ -9,7 +9,6 @@ import {
   ResponsiveContainer,
   Area,
   AreaChart,
-  TooltipProps,
 } from "recharts";
 import {
   TrendingUp,
@@ -22,62 +21,16 @@ import {
 } from "lucide-react";
 import Header from "@/components/common/Header";
 import CuteGlassButton from "@/components/ui/cute-glass-button";
-import { initialMarketDataInputs } from "@/lib/constants";
+import { INITIAL_RETIREMENT_DATA, initialMarketDataInputs } from "@/lib/constants";
 import { InView } from "@/components/ui/in-view";
 import Image from "next/image";
 import WhatIsRetireGame from "./WhatIsRetireGame";
-
-type FormData = {
-  age: number;
-  salary: number;
-  saving: number;
-  retireAge: number;
-  lifestyle: "low" | "medium" | "high";
-  portfolio: {
-    stock: number;
-    bond: number;
-    cash: number;
-  };
-};
-
-type HistoryItem = {
-  year: number;
-  age: number;
-  balance: number;
-  phase: string;
-};
-
-type StepProps = {
-  data: FormData;
-  onChange: Dispatch<SetStateAction<FormData>>;
-};
-
-interface CustomTooltipProps extends TooltipProps<number, string> {
-  payload?: Array<{
-    payload: {
-      age: number;
-      balance: number;
-      phase: string;
-    };
-    dataKey: string;
-    value: number;
-  }>;
-}
+import { toast } from "react-toastify";
+import { CustomTooltipProps, FormData, HistoryItem, StepProps } from "@/types/retire";
 
 export default function RetirementPage() {
   const [step, setStep] = useState(0);
-  const [formData, setFormData] = useState<FormData>({
-    age: 30,
-    salary: 30000,
-    saving: 15000,
-    retireAge: 60,
-    lifestyle: "medium",
-    portfolio: {
-      stock: 60,
-      bond: 30,
-      cash: 10,
-    },
-  });
+  const [formData, setFormData] = useState<FormData>(INITIAL_RETIREMENT_DATA);
   function GoToTopButton() {
     window.scrollTo({
       top: 0,
@@ -206,6 +159,16 @@ export default function RetirementPage() {
               <div className="max-w-max">
                 <CuteGlassButton
                   onClick={() => {
+                    console.log(step)
+                    if (step === 3) {
+                      let sumWeight: number = 0
+                      for (const [, value] of Object.entries(formData.portfolio)) {
+                        sumWeight += +value
+                      }
+                      if (sumWeight !== 100) {
+                        return toast('กรุณาใส่น้ำหนักของสินทรัพย์ให้รวมกันเท่ากับ 100%')
+                      }
+                    }
                     GoToTopButton();
                     setStep((s) => s + 1);
                   }}
@@ -414,9 +377,16 @@ function Step2({ data, onChange }: StepProps) {
             className="w-full px-4 py-3 bg-slate-700/50 border border-slate-600 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-white placeholder-slate-400 transition-all duration-200"
             placeholder="เช่น 10,000"
             value={data.saving}
-            onChange={(e) =>
-              onChange({ ...data, saving: Number(e.target.value) })
-            }
+            max={data.salary}
+            onChange={(e) => {
+              let value = Number(e.target.value);
+              if (value >= data.salary) {
+                value = data.salary;
+                onChange({ ...data, saving: isNaN(value) ? 0 : value });
+                return null;
+              }
+              onChange({ ...data, saving: isNaN(value) ? 0 : value });
+            }}
           />
         </div>
 
@@ -433,11 +403,11 @@ function Step2({ data, onChange }: StepProps) {
             className="w-full px-4 py-3 bg-slate-700/50 border border-slate-600 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-white placeholder-slate-400 transition-all duration-200"
             placeholder="เช่น 60"
             value={data.retireAge}
-            max={120}
+            max={89}
             onChange={(e) => {
               let value = Number(e.target.value);
-              if (value >= 120) {
-                value = 120;
+              if (value >= 89) {
+                value = 89;
                 onChange({ ...data, retireAge: isNaN(value) ? 0 : value });
                 return null;
               }
@@ -481,7 +451,7 @@ function Step3({ data, onChange }: StepProps) {
         <p className="text-slate-400">ค่าใช้จ่ายที่คาดหวังในอนาคต</p>
       </div>
 
-      <div className="grid gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {lifestyles.map((lifestyle) => (
           <div
             key={lifestyle.value}
@@ -562,15 +532,15 @@ function Step4({ data, onChange }: StepProps) {
               min="0"
               max="100"
               value={data.portfolio[type.key as keyof FormData["portfolio"]]}
-              onChange={(e) =>
+              onChange={(e) => {
                 onChange({
                   ...data,
                   portfolio: {
                     ...data.portfolio,
                     [type.key]: Number(e.target.value),
                   },
-                })
-              }
+                });
+              }}
               className="w-full mt-2 accent-indigo-500"
             />
           </div>
@@ -580,7 +550,7 @@ function Step4({ data, onChange }: StepProps) {
       <div
         className={`text-center p-4 rounded-xl ${
           total === 100
-            ? "bg-green-500/10 border border-green-500/30 text-green-400"
+            ? "bg-teal-500/10 border border-teal-500/30 text-teal-400"
             : "bg-yellow-500/10 border border-yellow-500/30 text-yellow-400"
         }`}
       >
@@ -626,26 +596,69 @@ function Step5({
         <p className="text-slate-400">ภาพรวมการเงินตลอดช่วงชีวิต</p>
       </div>
 
+      {isSuccessful ? (
+        <Image
+          src="/images/game/retire-success.png"
+          width={850}
+          height={400}
+          alt="retire success"
+          className="mb-12"
+        />
+      ) : (
+        <Image
+          src="/images/game/retire-fail.png"
+          width={850}
+          height={400}
+          alt="retire success"
+          className="mb-12"
+        />
+      )}
+
+      <div
+        className={`p-4 rounded-xl border ${
+          isSuccessful
+            ? "bg-teal-500/10 border-teal-500/30"
+            : "bg-red-500/10 border-red-500/30"
+        }`}
+      >
+        <div
+          className={`font-semibold mb-2 ${
+            isSuccessful ? "text-teal-400" : "text-red-400"
+          }`}
+        >
+          {isSuccessful
+            ? "✓ แผนการเกษียณสำเร็จ"
+            : "⚠️ แผนการเกษียณต้องปรับปรุง"}
+        </div>
+        <div className="text-slate-300">
+          {isSuccessful
+            ? `เงินของคุณจะเพียงพอใช้จนวัย ${
+                graphData[graphData.length - 1]?.age
+              } ปี`
+            : "ลองเพิ่มเงินออมหรือลดค่าใช้จ่ายหลังเกษียณ"}
+        </div>
+      </div>
+
       <div className="grid md:grid-cols-3 gap-4 mb-6">
         <div className="bg-slate-700/30 rounded-xl p-4 border border-slate-600">
           <div className="text-slate-400 text-sm">ระยะเวลาสะสม</div>
-          <div className="text-2xl font-bold text-indigo-400">
+          <div className="text-2xl font-bold text-teal-400">
             {data.retireAge - data.age} ปี
           </div>
         </div>
 
         <div className="bg-slate-700/30 rounded-xl p-4 border border-slate-600">
           <div className="text-slate-400 text-sm">เงินออมต่อปี</div>
-          <div className="text-2xl font-bold text-purple-400">
+          <div className="text-2xl font-bold text-indigo-400">
             {(data.saving * 12).toLocaleString()} บาท
           </div>
         </div>
 
         <div className="bg-slate-700/30 rounded-xl p-4 border border-slate-600">
-          <div className="text-slate-400 text-sm">สถานะแผน</div>
+          <div className="text-slate-400 text-sm">สถานะ</div>
           <div
             className={`text-2xl font-bold ${
-              isSuccessful ? "text-green-400" : "text-red-400"
+              isSuccessful ? "text-teal-400" : "text-red-400"
             }`}
           >
             {isSuccessful ? "เพียงพอ" : "ไม่เพียงพอ"}
@@ -658,7 +671,7 @@ function Step5({
           กราฟแสดงยอดเงินคงเหลือ
         </h3>
         <div className="h-80">
-          <ResponsiveContainer width="100%" height="100%">
+          <ResponsiveContainer width="100%" height="100%" className="text-sm">
             <AreaChart data={graphData}>
               <defs>
                 <linearGradient id="colorBalance" x1="0" y1="0" x2="0" y2="1">
@@ -688,31 +701,6 @@ function Step5({
               />
             </AreaChart>
           </ResponsiveContainer>
-        </div>
-      </div>
-
-      <div
-        className={`p-4 rounded-xl border ${
-          isSuccessful
-            ? "bg-green-500/10 border-green-500/30"
-            : "bg-red-500/10 border-red-500/30"
-        }`}
-      >
-        <div
-          className={`font-semibold mb-2 ${
-            isSuccessful ? "text-green-400" : "text-red-400"
-          }`}
-        >
-          {isSuccessful
-            ? "✅ แผนการเกษียณสำเร็จ"
-            : "⚠️ แผนการเกษียณต้องปรับปรุง"}
-        </div>
-        <div className="text-slate-300">
-          {isSuccessful
-            ? `เงินของคุณจะเพียงพอใช้จนวัย ${
-                graphData[graphData.length - 1]?.age
-              } ปี`
-            : "ลองเพิ่มเงินออมหรือลดค่าใช้จ่ายหลังเกษียณ"}
         </div>
       </div>
     </div>
