@@ -58,23 +58,9 @@ export const GAMES = [
     link: "/game/retire",
     url: "/images/game/retireicon.jpg",
   },
-  {
-    title: "test2",
-    content:
-      "คำนวณและหาพอร์ตลงทุนที่เหมาะสมตามหลัก Modern Portfolio Theory (MPT)",
-    link: "/game/portfolio",
-    url: "/images/game/investicon.jpg",
-  },
-  {
-    title: "test2cvb",
-    content:
-      "คำนวณและหาพอร์ตลงทุนที่เหมาะสมตามหลัก Modern Portfolio Theory (MPT)",
-    link: "/game/portfolio",
-    url: "/images/game/investicon.jpg",
-  },
 ];
 
-export const INITIAL_RETIREMENT_DATA:FormData = {
+export const INITIAL_RETIREMENT_DATA: FormData = {
   age: 30,
   salary: 30000,
   saving: 15000,

@@ -21,12 +21,20 @@ import {
 } from "lucide-react";
 import Header from "@/components/common/Header";
 import CuteGlassButton from "@/components/ui/cute-glass-button";
-import { INITIAL_RETIREMENT_DATA, initialMarketDataInputs } from "@/lib/constants";
+import {
+  INITIAL_RETIREMENT_DATA,
+  initialMarketDataInputs,
+} from "@/lib/constants";
 import { InView } from "@/components/ui/in-view";
 import Image from "next/image";
 import WhatIsRetireGame from "./WhatIsRetireGame";
 import { toast } from "react-toastify";
-import { CustomTooltipProps, FormData, HistoryItem, StepProps } from "@/types/retire";
+import {
+  CustomTooltipProps,
+  FormData,
+  HistoryItem,
+  StepProps,
+} from "@/types/retire";
 
 export default function RetirementPage() {
   const [step, setStep] = useState(0);
@@ -159,14 +167,18 @@ export default function RetirementPage() {
               <div className="max-w-max">
                 <CuteGlassButton
                   onClick={() => {
-                    console.log(step)
+                    console.log(step);
                     if (step === 3) {
-                      let sumWeight: number = 0
-                      for (const [, value] of Object.entries(formData.portfolio)) {
-                        sumWeight += +value
+                      let sumWeight: number = 0;
+                      for (const [, value] of Object.entries(
+                        formData.portfolio
+                      )) {
+                        sumWeight += +value;
                       }
                       if (sumWeight !== 100) {
-                        return toast('กรุณาใส่น้ำหนักของสินทรัพย์ให้รวมกันเท่ากับ 100%')
+                        return toast(
+                          "กรุณาใส่น้ำหนักของสินทรัพย์ให้รวมกันเท่ากับ 100%"
+                        );
                       }
                     }
                     GoToTopButton();
@@ -467,18 +479,22 @@ function Step3({ data, onChange }: StepProps) {
               })
             }
           >
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col items-center justify-between">
               <div>
-                <h3 className="font-semibold text-white">{lifestyle.label}</h3>
-                <p className="text-sm text-slate-400">{lifestyle.desc}</p>
+                <Image
+                  src={`/images/game/retire-${lifestyle.value}.png`}
+                  width={300}
+                  height={300}
+                  alt={data.lifestyle}
+                  className="rounded-lg mb-4"
+                />
+                <h3 className="font-semibold text-white text-center">
+                  {lifestyle.label}
+                </h3>
+                <p className="text-sm text-slate-400 text-center">
+                  {lifestyle.desc}
+                </p>
               </div>
-              <div
-                className={`w-4 h-4 rounded-full border-2 ${
-                  data.lifestyle === lifestyle.value
-                    ? "bg-indigo-500 border-indigo-500"
-                    : "border-slate-500"
-                }`}
-              />
             </div>
           </div>
         ))}
