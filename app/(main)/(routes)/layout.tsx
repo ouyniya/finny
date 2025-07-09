@@ -1,8 +1,11 @@
 import Bg from "@/components/main/Bg";
 import Footer from "@/components/main/Footer";
 import Navbar from "@/components/main/Navbar";
+import { initialProfile } from "@/lib/initial-profile";
 
-const MainLayout = ({ children }: { children: React.ReactNode }) => {
+const MainLayout = async ({ children }: { children: React.ReactNode }) => {
+    await initialProfile();
+
   return (
     <>
       <div
@@ -23,8 +26,6 @@ const MainLayout = ({ children }: { children: React.ReactNode }) => {
           <Footer />
         </div>
       </div>
-
-      
     </>
   );
 };

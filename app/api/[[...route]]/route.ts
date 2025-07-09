@@ -1,22 +1,17 @@
 import { Hono } from "hono";
 import { handle } from "hono/vercel";
+import { zValidator } from "@hono/zod-validator";
+import { z } from "zod";
+import { clerkMiddleware, getAuth } from "@hono/clerk-auth";
+import accounts from "./accounts";
 
-export const runtime = "edge";
+export const runtime = "nodejs";
 
 const app = new Hono().basePath("/api");
 
-app
-  .get("/hello", (c) => {
-    return c.json({
-      message: "Hello Next.js",
-    });
-  })
-  .get("/hello/:test", (c) => {
-    const test = c.req.param("test")
-    return c.json({
-      message: test,
-    });
-  });
+const routes = app.route("/accounts", accounts);
 
 export const GET = handle(app);
 export const POST = handle(app);
+
+export type Apptype = typeof routes; // RPC
