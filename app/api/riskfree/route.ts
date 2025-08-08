@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import puppeteer from "puppeteer";
 
-export async function GET(req: Request) {
+export async function GET() {
   const url = "https://www.thaibma.or.th/EN/Market/Index/ShortTermIndex.aspx";
 
   try {

@@ -22,6 +22,7 @@ Many thanks to everyone who shared their creative and inspiring work — it was 
 - 3D hover effect based on [Silas's CodePen](https://codepen.io/silas/pen/rNYqZoz)  
 - Morphing Gradients Animated Background [WeCoded](https://www.youtube.com/watch?v=Ml-B-W91gtw&t=6s)  
 - Gradient Text [ReactBits](https://www.reactbits.dev/text-animations/gradient-text)  
+- Build a Finance SaaS Platform With Nextjs, React, Honojs with CSV Upload (2024) [Code With Antonio](https://www.youtube.com/watch?v=N_uNKAus0II&t=34132s)  
 
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 

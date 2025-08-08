@@ -58,6 +58,12 @@ export const GAMES = [
     link: "/game/retire",
     url: "/images/game/retireicon.jpg",
   },
+  {
+    title: "เกมส์ Swing Pricing",
+    content: "เข้าใจกลไกของ Swing Pricing",
+    link: "/game/swing-pricing",
+    url: "/images/game/swing-pricing.jpg",
+  },
 ];
 
 export const INITIAL_RETIREMENT_DATA: FormData = {
@@ -72,3 +78,22 @@ export const INITIAL_RETIREMENT_DATA: FormData = {
     cash: 10,
   },
 };
+
+export const definition = [
+  {
+    word: `First Mover Advantage`,
+    definition: `เกิดขึ้นเมื่อมีการขายคืนจำนวนมาก ผู้ที่ขายคืนก่อนจะได้รับ NAV ที่สูงกว่า ซึ่งไม่สะท้อนถึงต้นทุนการขายสินทรัพย์ที่เกิดขึ้นภายหลัง ทำให้ผู้ลงทุนที่เหลือต้องรับภาระ`,
+  },
+  {
+    word: `Dilution (การเจือจาง)`,
+    definition: `มูลค่าหน่วยลงทุนของกองทุนลดลงเนื่องจากต้นทุนการทำธุรกรรมจากการเข้า-ออกของเงินลงทุน ส่งผลกระทบต่อผู้ลงทุนเดิมที่ยังถือหน่วยลงทุนอยู่`,
+  },
+  {
+    word: `Swing Threshold`,
+    definition: `เป็นระดับกระแสเงินลงทุนสุทธิ (เช่น % ของมูลค่ากองทุน) ที่ถ้าเกินกว่านี้แล้ว Swing Pricing จะถูกกระตุ้นให้ทำงาน (สำหรับ Partial Swing Pricing)`,
+  },
+  {
+    word: `อัตราต้นทุนการทำธุรกรรม (Transaction Cost Rate)`,
+    definition: `ใช้ในการประมาณการ Swing Factor ในที่นี้คือเปอร์เซ็นต์ของมูลค่าเงินที่ทำธุรกรรมที่จะกลายเป็นต้นทุน (รวมค่าคอมมิชชั่น, Bid-Ask Spread, Market Impact)`,
+  },
+];
