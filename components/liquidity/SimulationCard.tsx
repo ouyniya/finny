@@ -379,18 +379,23 @@ const SimulationCard: React.FC = () => {
     swingThresholdPercent,
   ]);
 
-  const flowType =
-    netFlowUnits > 0
-      ? "เงินไหลเข้าสุทธิ (Net Inflow)"
-      : netFlowUnits < 0
-      ? "เงินไหลออกสุทธิ (Net Outflow)"
-      : "ไม่มีการเปลี่ยนแปลง";
-  const flowDirectionClass =
-    netFlowUnits > 0
-      ? "text-green-600"
-      : netFlowUnits < 0
-      ? "text-red-600"
-      : "";
+  let flowType: string;
+  if (netFlowUnits > 0) {
+    flowType = "เงินไหลเข้าสุทธิ (Net Inflow)";
+  } else if (netFlowUnits < 0) {
+    flowType = "เงินไหลออกสุทธิ (Net Outflow)";
+  } else {
+    flowType = "ไม่มีการเปลี่ยนแปลง";
+  }
+
+  let flowDirectionClass: string;
+  if (netFlowUnits > 0) {
+    flowDirectionClass = "text-green-600";
+  } else if (netFlowUnits < 0) {
+    flowDirectionClass = "text-red-600";
+  } else {
+    flowDirectionClass = "";
+  }
 
   return (
     <div className="min-h-screen bg-primary-foreground/50 backdrop-blur-lg p-4 sm:p-6 lg:p-8 font-inter rounded-2xl">
@@ -399,17 +404,25 @@ const SimulationCard: React.FC = () => {
           <div className="z-10">
             <Header
               top="เกมส์การเงิน"
-              header="เกมส์ Swing Pricing"
-              content="ทำความเข้าใจกลไกของ Swing Pricing ที่ช่วยปกป้องมูลค่าของกองทุน"
+              header="เกมส์ Partial Swing Pricing"
+              content="มาปกป้องมูลค่าของกองทุนด้วย Partial Swing Pricing กันเถอะ"
               link="/game"
             />
           </div>
 
-          <div className="mt-8 mb-8">
-            <p className="opacity-50">
-              ปรับตัวเลขเพื่อดูการเปลี่ยนแปลงของ NAV และทำความเข้าใจกลไกของ
-              Swing Pricing ที่ช่วยป้องกันการเจือจาง (Dilution) และ First Mover
-              Advantage
+          <div className="flex flex-col gap-2 mt-8 mb-8 opacity-60">
+            <p className="flex gap-4">
+              <span className="underline min-w-max">คำแนะนำ</span>
+              <span className="">
+                {" "}
+                ปรับตัวเลขเพื่อดูการเปลี่ยนแปลงของ NAV และทำความเข้าใจกลไกของ
+                Partial Swing Pricing ที่ช่วยป้องกันการเจือจาง (Dilution) และ
+                First Mover Advantage
+              </span>
+            </p>
+            <p className="flex gap-4">
+              <span className="underline min-w-max">หมายเหตุ</span>
+              <span> สมมติให้ Swing Factor เท่ากับอัตราต้นทุนการทำธุรกรรม</span>
             </p>
           </div>
 
@@ -436,8 +449,8 @@ const SimulationCard: React.FC = () => {
             />
             <InputSlider
               label="ยอดซื้อ/ขายคืนสุทธิ (หน่วย)"
-              min={-500000000}
-              max={500000000}
+              min={-0.5 * totalUnits}
+              max={0.5 * totalUnits}
               step={1000}
               value={netFlowUnits}
               onChange={setNetFlowUnits}
@@ -456,7 +469,7 @@ const SimulationCard: React.FC = () => {
               onChange={setTransactionCostRate}
               unit="%"
               displayValue={`${(transactionCostRate * 100).toFixed(2)}`}
-              description="ค่าคอมมิชชั่น, Bid-Ask Spread, Market Impact"
+              description="เช่น ค่าคอมมิชชั่น, Bid-Ask Spread, Market Impact"
             />
             <InputSlider
               label="Swing Threshold"

@@ -59,8 +59,8 @@ export const GAMES = [
     url: "/images/game/retireicon.jpg",
   },
   {
-    title: "เกมส์ Swing Pricing",
-    content: "เข้าใจกลไกของ Swing Pricing",
+    title: "เกมส์ Partial Swing Pricing",
+    content: "เข้าใจกลไกของ Partial Swing Pricing",
     link: "/game/swing-pricing",
     url: "/images/game/swing-pricing.jpg",
   },
@@ -80,6 +80,10 @@ export const INITIAL_RETIREMENT_DATA: FormData = {
 };
 
 export const definition = [
+  {
+    word: `Swing Factor คืออะไร`,
+    definition: `คือค่าที่บริษัทจัดการกองทุนกำหนด ควรเท่ากับต้นทุนการทำธุรกรรมที่กองทุนต้องจ่าย เช่น ค่าคอมมิชชั่น Bid-Ask Spread, Market Impact โดยทั่วไปไม่เกิน 2–3% ของ NAV และขึ้นอยู่กับสภาพตลาดและสินทรัพย์ในพอร์ต เป็นต้น (เช่น กองทุนที่ลงทุนในสินทรัพย์สภาพคล่องต่ำอาจมี swing factor สูงกว่า)`,
+  },
   {
     word: `First Mover Advantage`,
     definition: `เกิดขึ้นเมื่อมีการขายคืนจำนวนมาก ผู้ที่ขายคืนก่อนจะได้รับ NAV ที่สูงกว่า ซึ่งไม่สะท้อนถึงต้นทุนการขายสินทรัพย์ที่เกิดขึ้นภายหลัง ทำให้ผู้ลงทุนที่เหลือต้องรับภาระ`,

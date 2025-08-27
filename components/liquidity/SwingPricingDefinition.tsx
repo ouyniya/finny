@@ -10,7 +10,7 @@ import { definition } from "@/lib/constants";
 const SwingPricingDefinition = () => {
   return (
     <div className="max-w-xs md:max-w-lg xl:max-w-2xl w-full mx-auto">
-      <h4 className="font-semibold mb-2">คำอธิบายศัพท์เฉพาะ:</h4>
+      <h4 className="font-semibold mb-2">สาระน่ารู้เพิ่มเติม:</h4>
       <InView
         variants={{
           hidden: {

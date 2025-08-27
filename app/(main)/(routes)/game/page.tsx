@@ -16,7 +16,11 @@ export default async function GamePage() {
           GAMES.map((game) => (
             <div key={game.title}>
               <MagicCardGame
-                title={game.title}
+                title={
+                  game.title.length <= 20
+                    ? game.title
+                    : game.title.substring(0, 20).trimEnd() + "..."
+                }
                 content={game.content}
                 link={game.link}
                 url={game.url}
