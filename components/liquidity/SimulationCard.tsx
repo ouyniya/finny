@@ -20,6 +20,7 @@ import {
   DetailedScenario,
   SimulationResults,
 } from "@/types/swing-pricing";
+import Link from "next/link";
 
 // Register Chart.js components
 ChartJS.register(
@@ -406,11 +407,11 @@ const SimulationCard: React.FC = () => {
               top="เกมส์การเงิน"
               header="เกมส์ Partial Swing Pricing"
               content="มาปกป้องมูลค่าของกองทุนด้วย Partial Swing Pricing กันเถอะ"
-              link="/game"
+              link="/game/lrm"
             />
           </div>
 
-          <div className="flex flex-col gap-2 mt-8 mb-8 opacity-60">
+          <div className="flex flex-col gap-2 mt-8 mb-8 opacity-60 text-sm">
             <p className="flex gap-4">
               <span className="underline min-w-max">คำแนะนำ</span>
               <span className="">
@@ -492,6 +493,11 @@ const SimulationCard: React.FC = () => {
             swingThresholdPercent={swingThresholdPercent}
           />
           <SwingPricingDefinition />
+          <Link href="https://ns3.aimc.or.th/web/wp-content/uploads/2022/01/%E0%B9%80%E0%B9%80%E0%B8%99%E0%B8%A7%E0%B8%9B%E0%B8%8F%E0%B8%B4%E0%B8%9A%E0%B8%B1%E0%B8%95%E0%B8%B4-LRM-guideline-30.12.2021.pdf">
+            <p className="mt-16 text-xs opacity-50">
+              ที่มา: แนวปฏิบัติการใช้เครืองมือบริหารความเสียงสภาพคล่อง, AIMC
+            </p>
+          </Link>
         </div>
       </div>
     </div>

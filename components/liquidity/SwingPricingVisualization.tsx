@@ -7,7 +7,6 @@ import {
   CheckCircle,
   DollarSign,
   Users,
-  ArrowRight,
   Shield,
   Calculator,
   HelpCircle,
@@ -149,7 +148,7 @@ const SwingPricingVisualization = ({
         <div className="text-right">
           <div
             className={`font-bold ${
-              isGood ? "text-green-600" : "text-red-600"
+              isGood ? "text-sky-600" : "text-violet-600"
             }`}
           >
             {value.toFixed(4)} บาท
@@ -157,7 +156,7 @@ const SwingPricingVisualization = ({
           {change && (
             <div
               className={`text-sm ${
-                change > 0 ? "text-red-500" : "text-green-500"
+                change > 0 ? "text-violet-500" : "text-sky-500"
               }`}
             >
               {change > 0 ? "+" : ""}
@@ -279,7 +278,7 @@ const SwingPricingVisualization = ({
           <Shield className="" size={24} />
           ผลลัพธ์การจำลอง Swing Pricing
         </h2>
-        <div className="bg-primary/10 border rounded-lg p-4  mx-auto">
+        <div className="bg-primary/5 border rounded-lg p-4  mx-auto">
           <div className="flex items-center justify-center gap-2 mb-2">
             <DollarSign className="" size={20} />
             <span className="font-semibold">
@@ -311,17 +310,13 @@ const SwingPricingVisualization = ({
 
       {/* Threshold Status */}
       <div
-        className={`mb-8 p-4 rounded-xl border-2 ${
-          results.isSwingTriggered
-            ? "bg-green-900/25 border"
-            : "bg-yellow-900/25 border"
-        }`}
+        className={`mb-8 p-4 rounded-xl`}
       >
         <div className="flex items-center justify-center gap-3 mb-2">
           {results.isSwingTriggered ? (
             <>
-              <CheckCircle className="text-green-400" size={24} />
-              <span className="font-bold text-green-400">
+              <CheckCircle className="text-sky-400" size={24} />
+              <span className="font-bold text-sky-400">
                 Swing Pricing เปิดใช้งาน! (เกิน Threshold{" "}
                 {swingThresholdPercent}%)
               </span>
@@ -360,14 +355,15 @@ const SwingPricingVisualization = ({
         )}
       </div>
 
-      {/* Visual Flow Diagram */}
+     
+      {/*
       <div className="border rounded-xl p-6 shadow-lg mb-8">
         <h3 className="text-xl font-bold text-center mb-6 flex items-center justify-center gap-2">
           กระบวนการ Swing Pricing
         </h3>
 
         <div className="flex items-center justify-between max-w-4xl mx-auto px-8">
-          {/* Step 1 */}
+      
           <div className="text-center">
             <div className="w-16 h-16 bg-blue-500 rounded-full flex items-center justify-center mb-2 mx-auto">
               <Users className="text-white" size={24} />
@@ -378,12 +374,12 @@ const SwingPricingVisualization = ({
             </p>
           </div>
           <ArrowRight className="" size={24} />
-          {/* Step 2 */}
+        
           <div className="text-center">
             <div
               className={`w-16 h-16 rounded-full flex items-center justify-center mb-2 mx-auto ${
                 flowPercentage >= swingThresholdPercent
-                  ? "bg-green-500"
+                  ? "bg-sky-500"
                   : "bg-yellow-500"
               }`}
             >
@@ -395,46 +391,45 @@ const SwingPricingVisualization = ({
             <p className="text-xs ">เกณฑ์ {swingThresholdPercent}%</p>
           </div>
           <ArrowRight className="" size={24} />
-          {/* Step 3 */}
+       
           <div className="text-center">
             <div
               className={`w-16 h-16 rounded-full flex items-center justify-center mb-2 mx-auto ${
-                results.isSwingTriggered ? "bg-green-500" : "bg-red-500"
+                results.isSwingTriggeviolet ? "bg-sky-500" : "bg-violet-500"
               }`}
             >
-              {results.isSwingTriggered ? (
+              {results.isSwingTriggeviolet ? (
                 <CheckCircle className="text-white" size={24} />
               ) : (
                 <AlertTriangle className="text-white" size={24} />
               )}
             </div>
             <p className="text-sm font-medium">
-              {results.isSwingTriggered ? "ปรับ NAV" : "ไม่ปรับ NAV"}
+              {results.isSwingTriggeviolet ? "ปรับ NAV" : "ไม่ปรับ NAV"}
             </p>
             <p className="text-xs ">
-              {results.isSwingTriggered
+              {results.isSwingTriggeviolet
                 ? `±${results.swingFactorUsed}%`
                 : "NAV เดิม"}
             </p>
           </div>
           <ArrowRight className="" size={24} />
-          {/* Step 4 */}
+      
           <div className="text-center">
             <div
               className={`w-16 h-16 rounded-full flex items-center justify-center mb-2 mx-auto ${
-                results.isSwingTriggered ? "bg-green-500" : "bg-red-500"
+                results.isSwingTriggeviolet ? "bg-sky-500" : "bg-violet-500"
               }`}
             >
               <Shield className="text-white" size={24} />
             </div>
             <p className="text-sm font-medium">ผลลัพธ์</p>
             <p className="text-xs ">
-              {results.isSwingTriggered ? "ป้องกันสำเร็จ" : "เกิด Dilution"}
+              {results.isSwingTriggeviolet ? "ป้องกันสำเร็จ" : "เกิด Dilution"}
             </p>
           </div>
         </div>
 
-        {/* Summary Stats with Calculations */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-8">
           <div className="bg-primary/10 p-4 rounded-lg shadow text-center relative">
             <div className="text-2xl font-bold text-sky-500">
@@ -475,10 +470,10 @@ const SwingPricingVisualization = ({
           <div className="bg-primary/10 p-4 rounded-lg shadow text-center relative">
             <div
               className={`text-2xl font-bold ${
-                results.isSwingTriggered ? "text-green-500" : ""
+                results.isSwingTriggeviolet ? "text-sky-500" : ""
               }`}
             >
-              {results.isSwingTriggered ? results.swingFactorUsed : 0}%
+              {results.isSwingTriggeviolet ? results.swingFactorUsed : 0}%
             </div>
             <div className="text-sm ">Swing Factor ที่ใช้</div>
             <TooltipWrapper
@@ -495,7 +490,7 @@ const SwingPricingVisualization = ({
           </div>
 
           <div className="bg-primary/10 p-4 rounded-lg shadow text-center relative">
-            <div className="text-2xl font-bold text-red-500">
+            <div className="text-2xl font-bold text-violet-500">
               {results.dilutionAmount.toFixed(4)}
             </div>
             <div className="text-sm ">การเจือจาง (Dilution)</div>
@@ -511,6 +506,7 @@ const SwingPricingVisualization = ({
           </div>
         </div>
       </div>
+      */}
 
       {/* Main Comparison */}
       <div className="grid md:grid-cols-2 gap-8 mb-8">
@@ -519,8 +515,8 @@ const SwingPricingVisualization = ({
           title="สถานการณ์ที่ 1: ไม่มี Swing Pricing"
           subtitle="ผู้ลงทุนเดิมต้องรับภาระต้นทุน"
           icon={AlertTriangle}
-          iconColor="bg-red-500"
-          bgColor="bg-red-900/20 border border-red-900/50"
+          iconColor="bg-violet-500"
+          bgColor=""
         >
           <div className="space-y-4">
             <NavComparison
@@ -541,16 +537,16 @@ const SwingPricingVisualization = ({
               formula={calculations.navNoSwing.formula}
               explanation={calculations.navNoSwing.explanation}
             />
-            <div className="bg-red-900/50 p-4 rounded-lg border-l-4 border-red-700">
+            <div className="bg-violet-900/15 p-4 rounded-lg border-l-4 border-violet-900">
               <div className="flex items-start gap-2">
-                <TrendingDown className="text-red-400 mt-1" size={20} />
+                <TrendingDown className=" mt-1" size={20} />
                 <div className="flex-1">
-                  <h5 className="font-bold text-red-400 mb-2 flex items-center gap-2">
+                  <h5 className="font-bold  mb-2 flex items-center gap-2">
                     ปัญหาที่เกิดขึ้น:
                   </h5>
                   <div className="space-y-3">
                     <div className="flex items-center justify-between">
-                      <span className="text-red-400 text-sm">
+                      <span className=" text-sm">
                         • <strong>Dilution:</strong>{" "}
                         {results.dilutionAmount.toFixed(4)} บาท/หน่วย (
                         {results.dilutionPercentage.toFixed(2)}%)
@@ -561,7 +557,7 @@ const SwingPricingVisualization = ({
                       >
                         <button
                           onClick={() => toggleCalculation("dilution")}
-                          className="text-red-400 hover:text-red-800"
+                          className=" hover:text-violet-800"
                         >
                           <Calculator size={14} />
                         </button>
@@ -580,7 +576,7 @@ const SwingPricingVisualization = ({
                     )}
 
                     <div className="flex items-center justify-between">
-                      <span className="text-red-400 text-sm">
+                      <span className=" text-sm">
                         • <strong>First Mover Advantage:</strong>{" "}
                         {results.firstMoverAdvantage.toLocaleString()} บาท
                       </span>
@@ -592,7 +588,7 @@ const SwingPricingVisualization = ({
                           onClick={() =>
                             toggleCalculation("firstMoverAdvantage")
                           }
-                          className="text-red-400 hover:text-red-800"
+                          className=" hover:text-violet-800"
                         >
                           <Calculator size={14} />
                         </button>
@@ -610,7 +606,7 @@ const SwingPricingVisualization = ({
                       </div>
                     )}
 
-                    <div className="text-red-400 text-sm">
+                    <div className=" text-sm">
                       • ผู้ลงทุนเดิมเสียเปรียบ
                     </div>
                   </div>
@@ -625,8 +621,8 @@ const SwingPricingVisualization = ({
           title="สถานการณ์ที่ 2: มี Swing Pricing"
           subtitle="ป้องกันผู้ลงทุนเดิมจากต้นทุน"
           icon={Shield}
-          iconColor="bg-green-500"
-          bgColor="bg-green-900/20 border border-green-900/50"
+          iconColor="bg-sky-500"
+          bgColor=""
         >
           <div className="space-y-4">
             <NavComparison
@@ -650,14 +646,14 @@ const SwingPricingVisualization = ({
               explanation="Swing Pricing ทำให้ผู้ลงทุนเดิมไม่ได้รับผลกระทบจากต้นทุนการทำธุรกรรม"
             />
             {results.isSwingTriggered ? (
-              <div className="bg-green-900/50 p-4 rounded-lg border-l-4 border-green-400">
+              <div className="bg-sky-900/15 p-4 rounded-lg border-l-4 border-sky-900">
                 <div className="flex items-start gap-2">
-                  <CheckCircle className="text-green-600 mt-1" size={20} />
+                  <CheckCircle className=" mt-1" size={20} />
                   <div>
-                    <h5 className="font-bold text-green-400 mb-2">
+                    <h5 className="font-bold mb-2">
                       การป้องกันที่ทำงาน:
                     </h5>
-                    <ul className="text-green-400 text-sm space-y-1">
+                    <ul className="text-sm space-y-1">
                       <li>
                         • <strong>Swing Factor:</strong>{" "}
                         {results.swingFactorUsed}% ถูกนำมาใช้

@@ -24,7 +24,7 @@ const features = [
     Icon: MagicWandIcon,
     name: "ช่วยเลือกหน่อย",
     description: "หากคุณยังไม่มีกองทุนรวมในใจ เราช่วยคุณคิดได้นะ",
-    href: "/",
+    href: "/game",
     cta: "รายละเอียดเพิ่มเติม",
     background: (
       <div>
