@@ -1,27 +1,40 @@
 "use client";
 
-import Header from "@/components/common/Header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { CheckCheck } from "lucide-react";
 import { useState } from "react";
 
+interface PersonType {
+  name?: string;
+  amount: number;
+  holdingPeriod: number;
+}
+
+interface ResultType {
+  hasLiquidityFee: boolean;
+  feeRate: string;
+  feeAmount: string;
+  reason: string | number;
+  netAmount: number;
+}
+
 const LiquidityFeePage = () => {
   // Individual transaction inputs
-  const [person1, setPerson1] = useState({
+  const [person1, setPerson1] = useState<PersonType>({
     name: "นาย A",
     amount: 100000,
     holdingPeriod: 30,
   });
 
-  const [person2, setPerson2] = useState({
+  const [person2, setPerson2] = useState<PersonType>({
     name: "นาย B",
     amount: 100000,
     holdingPeriod: 15,
   });
 
-  const [person3, setPerson3] = useState({
+  const [person3, setPerson3] = useState<PersonType>({
     name: "นาย C",
     amount: 100000,
     holdingPeriod: 5,
@@ -46,20 +59,24 @@ const LiquidityFeePage = () => {
     largeAmountFee: 0.5,
   });
 
-  const updateRule = (key, value) => {
+  const updateRule = (key: string, value: string) => {
     setRules((prev) => ({ ...prev, [key]: parseFloat(value) || 0 }));
   };
 
-  const updatePerson = (personSetter, field, value) => {
+  const updatePerson = (
+    personSetter: (arg0: (prev: PersonType) => PersonType) => void,
+    field: string,
+    value: number
+  ) => {
     personSetter((prev) => ({ ...prev, [field]: value }));
   };
 
-  const updateFundParam = (key, value) => {
+  const updateFundParam = (key: string, value: string) => {
     setFundParams((prev) => ({ ...prev, [key]: parseFloat(value) || 0 }));
   };
 
   // Check liquidity fee for individual person
-  const checkIndividualFee = (person) => {
+  const checkIndividualFee = (person: PersonType) => {
     let hasLiquidityFee = false;
     let feeRate = 0;
     let reason = "";
@@ -146,7 +163,15 @@ const LiquidityFeePage = () => {
 
   const impact = calculateFundImpact();
 
-  const PersonCard = ({ person, result, setPerson, personName }) => (
+  const PersonCard = ({
+    person,
+    result,
+    setPerson,
+  }: {
+    person: PersonType;
+    result: ResultType;
+    setPerson: React.Dispatch<React.SetStateAction<PersonType>>;
+  }) => (
     <div
       className={`p-4 rounded-lg ${
         result.hasLiquidityFee ? "bg-sky-500/15" : ""
@@ -461,19 +486,16 @@ const LiquidityFeePage = () => {
                   person={person1}
                   result={impact.person1Result}
                   setPerson={setPerson1}
-                  personName="person1"
                 />
                 <PersonCard
                   person={person2}
                   result={impact.person2Result}
                   setPerson={setPerson2}
-                  personName="person2"
                 />
                 <PersonCard
                   person={person3}
                   result={impact.person3Result}
                   setPerson={setPerson3}
-                  personName="person3"
                 />
               </div>
 
