@@ -76,9 +76,14 @@ const Chart = () => {
         `/api/stock-price?stock=${STOCK}&dateValue=${dateStr}`
       );
 
-      if (!res.ok) throw new Error("API error");
+      if (!res.ok) {
+        console.log("API error")
+        throw new Error("API error");
+      }
 
+      
       const json = await res.json();
+
       setChartData(json);
     };
 

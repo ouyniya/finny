@@ -7,8 +7,6 @@ import { cn } from "@/lib/utils";
 import { MagicWandIcon, HeartIcon } from "@radix-ui/react-icons";
 import Image from "next/image";
 import { OrbitingCircles } from "@/components/ui/magicui/orbiting-circles";
-// import GradientText from "@/components/text/GradientText";
-// import Link from "next/link";
 
 import {
   Building,
@@ -23,7 +21,7 @@ const features = [
   {
     Icon: MagicWandIcon,
     name: "ช่วยเลือกหน่อย",
-    description: "หากคุณยังไม่มีกองทุนรวมในใจ เราช่วยคุณคิดได้นะ",
+    description: "ลองเล่นเกมส์เสริมความรู้เกี่ยวกับกองทุนก่อนดีไหม",
     href: "/game",
     cta: "รายละเอียดเพิ่มเติม",
     background: (
@@ -211,29 +209,6 @@ const KnowYouPage = () => {
         header="คุณมีกองทุนในใจแล้วหรือยัง"
         content="เริ่มต้นค้นหากองทุนที่ใช่ของคุณ"
       />
-      {/* <BentoGrid className="lg:grid grid-cols-2 grid-rows-2 lg:grid-rows-1 hidden text-2xl font-bold">
-        <div className="w-full text-center">
-          <GradientText
-            colors={["#40ffaa", "#4079ff", "#40ffaa", "#4079ff", "#40ffaa"]}
-            animationSpeed={3}
-            showBorder={false}
-            className="text-lg md:text-2xl"
-          >
-            <Link href="/search">มีแล้วจ้า</Link>
-          </GradientText>
-        </div>
-        <div className="w-full text-center">
-          {" "}
-          <GradientText
-            colors={["#FFBF00", "#ffce00", "#ff7400", "#ffce00", "#ffde1a"]}
-            animationSpeed={3}
-            showBorder={false}
-            className="text-lg md:text-2xl"
-          >
-            ยังไม่มีเลย
-          </GradientText>
-        </div>
-      </BentoGrid> */}
 
       <BentoGrid className="grid grid-cols-2 grid-rows-2 lg:grid-rows-1">
         {features.map((feature) => (

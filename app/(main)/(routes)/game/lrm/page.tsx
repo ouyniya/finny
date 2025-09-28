@@ -9,9 +9,9 @@ export default async function GamePage() {
         top="Game"
         header="เครื่องมือบริหารความเสี่ยงสภาพคล่องของกองทุนรวม"
         content="Liquidity Management Tools (LMTs)"
+        link="/game"
       />
 
-    <h1 className="font-semibold">กลุ่มเครื่องมือที่กำหนดให้ผู้ลงทุนเป็นผู้รับภาระค่าใช้จ่าย (Pass on Transaction Cost tools) </h1>
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mx-auto">
         {LRMGAMES &&
           LRMGAMES.map((game) => 

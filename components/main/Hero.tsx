@@ -31,7 +31,10 @@ const Hero = () => {
           </div>
         </div>
 
-        <div className="flex justify-center w-full">
+        <div className="flex justify-center w-full gap-4">
+          <a href="/story">
+            <GlowEffectButton>ติดตามข่าวสารกองทุน</GlowEffectButton>
+          </a>
           <a href="/know-you">
             <GlowEffectButton>ค้นหากองทุนที่ใช่</GlowEffectButton>
           </a>

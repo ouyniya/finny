@@ -64,6 +64,12 @@ export const GAMES = [
     link: "/game/lrm/swing-pricing",
     url: "/images/game/swing-pricing.jpg",
   },
+  {
+    title: "เกมส์ Liquidity Fee",
+    content: "เข้าใจกลไกของ Liquidity Fee",
+    link: "/game/lrm/liquidity-fee",
+    url: "/images/game/liquidity-icon.jpg",
+  },
 ];
 
 export const LRMGAMES = [
@@ -71,18 +77,12 @@ export const LRMGAMES = [
     title: "เกมส์ Liquidity Fee",
     content: "เข้าใจกลไกของ Liquidity Fee",
     link: "/game/lrm/liquidity-fee",
-    url: "/images/game/swing-pricing.jpg",
+    url: "/images/game/liquidity-icon.jpg",
   },
   {
     title: "เกมส์ Partial Swing Pricing",
     content: "เข้าใจกลไกของ Partial Swing Pricing",
     link: "/game/lrm/swing-pricing",
-    url: "/images/game/swing-pricing.jpg",
-  },
-  {
-    title: "เกมส์ ADL",
-    content: "เข้าใจกลไกของ ADL",
-    link: "/game/lrm/liquidity-fee",
     url: "/images/game/swing-pricing.jpg",
   },
 ];

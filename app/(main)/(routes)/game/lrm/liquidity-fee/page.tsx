@@ -1,12 +1,15 @@
 "use client";
 
+import Header from "@/components/common/Header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { CheckCheck } from "lucide-react";
+import { CheckCheck, ReplyIcon } from "lucide-react";
+import Image from "next/image";
 import { useState } from "react";
 
 interface PersonType {
+  id: number;
   name?: string;
   amount: number;
   holdingPeriod: number;
@@ -21,34 +24,21 @@ interface ResultType {
 }
 
 const LiquidityFeePage = () => {
-  // Individual transaction inputs
-  const [person1, setPerson1] = useState<PersonType>({
-    name: "นาย A",
-    amount: 100000,
-    holdingPeriod: 30,
-  });
+  const initialPeople: PersonType[] = [
+    { id: 1, name: "นาย A", amount: 100000, holdingPeriod: 30 },
+    { id: 2, name: "นาย B", amount: 100000, holdingPeriod: 15 },
+    { id: 3, name: "นาย C", amount: 100000, holdingPeriod: 5 },
+  ];
 
-  const [person2, setPerson2] = useState<PersonType>({
-    name: "นาย B",
-    amount: 100000,
-    holdingPeriod: 15,
-  });
+  const [people, setPeople] = useState<PersonType[]>(initialPeople);
 
-  const [person3, setPerson3] = useState<PersonType>({
-    name: "นาย C",
-    amount: 100000,
-    holdingPeriod: 5,
-  });
-
-  // Fund parameters
   const [fundParams, setFundParams] = useState({
-    totalFundValue: 10000000, // 10 ล้านบาท
-    liquidAssetRatio: 15, // 15% เป็นสินทรัพย์สภาพคล่อง
-    tradingCostRate: 0.3, // 0.3% trading cost
-    marketImpactRate: 0.2, // 0.2% market impact
+    totalFundValue: 10000000,
+    liquidAssetRatio: 15,
+    tradingCostRate: 0.3,
+    marketImpactRate: 0.2,
   });
 
-  // Customizable rules
   const [rules, setRules] = useState({
     shortHoldThreshold: 7,
     shortHoldFee: 2.0,
@@ -63,32 +53,49 @@ const LiquidityFeePage = () => {
     setRules((prev) => ({ ...prev, [key]: parseFloat(value) || 0 }));
   };
 
-  const updatePerson = (
-    personSetter: (arg0: (prev: PersonType) => PersonType) => void,
-    field: string,
-    value: number
-  ) => {
-    personSetter((prev) => ({ ...prev, [field]: value }));
+  const updatePerson = (id: number, field: string, value: number) => {
+    setPeople((prev) =>
+      prev.map((person) =>
+        person.id === id ? { ...person, [field]: value } : person
+      )
+    );
+  };
+
+  const addPerson = () => {
+    if (people.length < 10) {
+      const nextId =
+        people.length > 0 ? Math.max(...people.map((p) => p.id)) + 1 : 1;
+      const nextName = `นาย ${String.fromCharCode(65 + people.length)}`;
+      setPeople((prev) => [
+        ...prev,
+        {
+          id: nextId,
+          name: nextName,
+          amount: 100000,
+          holdingPeriod: 30,
+        },
+      ]);
+    }
+  };
+
+  const removePerson = (id: number) => {
+    setPeople((prev) => prev.filter((person) => person.id !== id));
   };
 
   const updateFundParam = (key: string, value: string) => {
     setFundParams((prev) => ({ ...prev, [key]: parseFloat(value) || 0 }));
   };
 
-  // Check liquidity fee for individual person
   const checkIndividualFee = (person: PersonType) => {
     let hasLiquidityFee = false;
     let feeRate = 0;
     let reason = "";
 
-    // Rule 1: Short holding period
     if (person.holdingPeriod < rules.shortHoldThreshold) {
       hasLiquidityFee = true;
       feeRate = rules.shortHoldFee;
       reason = `ถือครองน้อยกว่า ${rules.shortHoldThreshold} วัน`;
-    }
-    // Rule 2: Medium holding + large amount
-    else if (
+    } else if (
       person.holdingPeriod < rules.mediumHoldThreshold &&
       person.amount >= rules.mediumHoldMinAmount
     ) {
@@ -97,9 +104,7 @@ const LiquidityFeePage = () => {
       reason = `ถือครองน้อยกว่า ${
         rules.mediumHoldThreshold
       } วัน และขายคืนมากกว่า ${rules.mediumHoldMinAmount.toLocaleString()} บาท`;
-    }
-    // Rule 3: Large single redemption
-    else if (person.amount >= rules.largeAmountThreshold) {
+    } else if (person.amount >= rules.largeAmountThreshold) {
       hasLiquidityFee = true;
       feeRate = rules.largeAmountFee;
       reason = `ขายคืนครั้งเดียวมากกว่า ${rules.largeAmountThreshold.toLocaleString()} บาท`;
@@ -116,48 +121,34 @@ const LiquidityFeePage = () => {
     };
   };
 
-  // Calculate fund impact
   const calculateFundImpact = () => {
-    const person1Result = checkIndividualFee(person1);
-    const person2Result = checkIndividualFee(person2);
-    const person3Result = checkIndividualFee(person3);
+    const results = people.map((person) => checkIndividualFee(person));
 
-    const totalRedemption = person1.amount + person2.amount + person3.amount;
-    const totalFeesCollected =
-      parseFloat(person1Result.feeAmount) +
-      parseFloat(person2Result.feeAmount) +
-      parseFloat(person3Result.feeAmount);
+    const totalRedemption = people.reduce((sum, p) => sum + p.amount, 0);
+    const totalFeesCollected = results.reduce(
+      (sum, r) => sum + parseFloat(r.feeAmount),
+      0
+    );
 
-    // Fund liquidity analysis
     const availableLiquidity =
       (fundParams.totalFundValue * fundParams.liquidAssetRatio) / 100;
-    const liquidityRatio = availableLiquidity / totalRedemption;
-
-    // Actual fund costs for selling assets
     const assetsToSell = Math.max(0, totalRedemption - availableLiquidity);
     const tradingCost = (assetsToSell * fundParams.tradingCostRate) / 100;
     const marketImpact = (assetsToSell * fundParams.marketImpactRate) / 100;
     const totalFundCosts = tradingCost + marketImpact;
 
-    // Cost coverage analysis
-    const costCoverageRatio = totalFeesCollected / (totalFundCosts || 1);
     const netFundImpact = totalFundCosts - totalFeesCollected;
 
     return {
-      person1Result,
-      person2Result,
-      person3Result,
+      results,
       totalRedemption,
       totalFeesCollected,
       availableLiquidity,
-      liquidityRatio,
       assetsToSell,
       tradingCost,
       marketImpact,
       totalFundCosts,
-      costCoverageRatio,
       netFundImpact,
-      remainingFundValue: fundParams.totalFundValue - totalRedemption,
     };
   };
 
@@ -166,11 +157,9 @@ const LiquidityFeePage = () => {
   const PersonCard = ({
     person,
     result,
-    setPerson,
   }: {
     person: PersonType;
     result: ResultType;
-    setPerson: React.Dispatch<React.SetStateAction<PersonType>>;
   }) => (
     <div
       className={`p-4 rounded-lg ${
@@ -178,7 +167,7 @@ const LiquidityFeePage = () => {
       }`}
     >
       <div className="flex justify-between items-center mb-3">
-        <h3 className=" text-lg">{person.name}</h3>
+        <h3 className="text-lg">{person.name}</h3>
         <div className="text-2xl">
           {result.hasLiquidityFee ? (
             <CheckCheck size={16} className="text-sky-500" />
@@ -187,10 +176,9 @@ const LiquidityFeePage = () => {
           )}
         </div>
       </div>
-
       <div className="space-y-3">
         <div>
-          <Label className="block text-xs  mb-1">
+          <Label className="block text-xs mb-1">
             จำนวนขายคืน: {person.amount.toLocaleString()} บาท
           </Label>
           <input
@@ -200,14 +188,13 @@ const LiquidityFeePage = () => {
             step="10000"
             value={person.amount}
             onChange={(e) =>
-              updatePerson(setPerson, "amount", Number(e.target.value))
+              updatePerson(person.id, "amount", Number(e.target.value))
             }
             className="w-full h-2 bg-gray-200 rounded-lg"
           />
         </div>
-
         <div>
-          <Label className="block text-xs  mb-1">
+          <Label className="block text-xs mb-1">
             ระยะเวลาถือครอง: {person.holdingPeriod} วัน
           </Label>
           <input
@@ -216,12 +203,11 @@ const LiquidityFeePage = () => {
             max="365"
             value={person.holdingPeriod}
             onChange={(e) =>
-              updatePerson(setPerson, "holdingPeriod", Number(e.target.value))
+              updatePerson(person.id, "holdingPeriod", Number(e.target.value))
             }
             className="w-full h-2 bg-gray-200 rounded-lg"
           />
         </div>
-
         <div className="pt-2 border-t text-sm">
           {result.hasLiquidityFee ? (
             <div>
@@ -247,6 +233,13 @@ const LiquidityFeePage = () => {
             </div>
           )}
         </div>
+        <Button
+          onClick={() => removePerson(person.id)}
+          className="w-full mt-2 hover:cursor-pointer"
+          variant="destructive"
+        >
+          ลบ
+        </Button>
       </div>
     </div>
   );
@@ -256,22 +249,28 @@ const LiquidityFeePage = () => {
       <div className="container mx-auto p-4 md:p-8 bg-primary-foreground rounded-xl font-inter relative -z-10 overflow-hidden">
         <div className="max-w-6xl mx-auto rounded-xl p-6 sm:p-8 lg:p-10 -z-10 overflow-hidden">
           <div className="z-10 mb-8">
-            <div className="text-center">
-              <h1 className="text-3xl  mb-2">เกมส์ Liquidity Fee Impact</h1>
-              <p className="text-lg opacity-75 mb-4">
-                จำลองผลกระทบต่อกองทุนและต้นทุนการซื้อขายจริง
-              </p>
+            <div className="text-center mb-8">
+              <Header
+                top="Game"
+                header="เกมส์ Liquidity Fee"
+                content="จำลองผลกระทบต่อกองทุนและต้นทุนการซื้อขายจริง"
+                link="/game/lrm"
+              />
             </div>
+            <Image
+              src="/images/game/liquidity-fee.jpg"
+              alt="liquidity-fee"
+              width={1500}
+              height={500}
+            />
           </div>
-
           <div className="w-full mx-auto min-h-screen p-6">
             <div className="w-full mx-auto space-y-8">
-              {/* Fund Parameters */}
               <div className="rounded-xl p-6">
-                <h2 className="text-lg  mb-4">ข้อมูลกองทุน</h2>
+                <h2 className="text-lg mb-4">ข้อมูลกองทุน</h2>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   <div>
-                    <Label className="block text-xs  mb-1">
+                    <Label className="block mb-1">
                       มูลค่ากองทุน: {fundParams.totalFundValue.toLocaleString()}{" "}
                       บาท
                     </Label>
@@ -288,7 +287,7 @@ const LiquidityFeePage = () => {
                     />
                   </div>
                   <div>
-                    <Label className="block text-xs  mb-1">
+                    <Label className="block  mb-1">
                       สินทรัพย์สภาพคล่อง: {fundParams.liquidAssetRatio}%
                     </Label>
                     <input
@@ -304,7 +303,7 @@ const LiquidityFeePage = () => {
                     />
                   </div>
                   <div>
-                    <Label className="block text-xs  mb-1">
+                    <Label className="block  mb-1">
                       Trading Cost: {fundParams.tradingCostRate}%
                     </Label>
                     <input
@@ -320,7 +319,7 @@ const LiquidityFeePage = () => {
                     />
                   </div>
                   <div>
-                    <Label className="block text-xs  mb-1">
+                    <Label className="block  mb-1">
                       Market Impact: {fundParams.marketImpactRate}%
                     </Label>
                     <input
@@ -337,21 +336,17 @@ const LiquidityFeePage = () => {
                   </div>
                 </div>
               </div>
-
-              {/* Rules Panel */}
               <div className="w-full mx-auto">
                 <div className="rounded-xl p-6">
-                  <h2 className="text-xl  mb-4">กฎ Liquidity Fee</h2>
-
+                  <h2 className="text-xl mb-4">กฎ Liquidity Fee</h2>
                   <div className="flex w-full justify-between gap-4">
-                    {/* Short Hold Rule */}
                     <div className="basis-1/3 p-3 bg-primary/8 rounded-lg">
                       <h3 className=" mb-4 text-sm font-semibold">
                         กฎ 1: ถือครองสั้น
                       </h3>
                       <div className="grid grid-cols-1 gap-2">
                         <div>
-                          <Label className="block text-xs  mb-1">วัน</Label>
+                          <Label className="block text-xs mb-1">วัน</Label>
                           <Input
                             type="number"
                             value={rules.shortHoldThreshold}
@@ -362,7 +357,7 @@ const LiquidityFeePage = () => {
                           />
                         </div>
                         <div>
-                          <Label className="block text-xs  mb-1">Fee (%)</Label>
+                          <Label className="block text-xs mb-1">Fee (%)</Label>
                           <Input
                             type="number"
                             step="0.1"
@@ -375,15 +370,13 @@ const LiquidityFeePage = () => {
                         </div>
                       </div>
                     </div>
-
-                    {/* Medium Hold Rule */}
                     <div className="basis-1/3 p-3 bg-primary/8 rounded-lg">
                       <h3 className=" mb-4 text-sm font-semibold">
                         กฎ 2: ปานกลาง+มาก
                       </h3>
                       <div className="grid grid-cols-1 gap-2">
                         <div>
-                          <Label className="block text-xs  mb-1">วัน</Label>
+                          <Label className="block text-xs mb-1">วัน</Label>
                           <Input
                             type="number"
                             value={rules.mediumHoldThreshold}
@@ -394,7 +387,7 @@ const LiquidityFeePage = () => {
                           />
                         </div>
                         <div>
-                          <Label className="block text-xs  mb-1">จำนวน</Label>
+                          <Label className="block text-xs mb-1">จำนวน</Label>
                           <Input
                             type="number"
                             step="10000"
@@ -406,7 +399,7 @@ const LiquidityFeePage = () => {
                           />
                         </div>
                         <div>
-                          <Label className="block text-xs  mb-1">Fee (%)</Label>
+                          <Label className="block text-xs mb-1">Fee (%)</Label>
                           <Input
                             type="number"
                             step="0.1"
@@ -419,15 +412,13 @@ const LiquidityFeePage = () => {
                         </div>
                       </div>
                     </div>
-
-                    {/* Large Amount Rule */}
                     <div className="basis-1/3 p-3 bg-primary/8 rounded-lg">
                       <h3 className=" mb-4 text-sm font-semibold">
                         กฎ 3: จำนวนมาก
                       </h3>
                       <div className="grid grid-cols-1 gap-2">
                         <div>
-                          <Label className="block text-xs  mb-1">จำนวน</Label>
+                          <Label className="block text-xs mb-1">จำนวน</Label>
                           <Input
                             type="number"
                             step="100000"
@@ -439,7 +430,7 @@ const LiquidityFeePage = () => {
                           />
                         </div>
                         <div>
-                          <Label className="block text-xs  mb-1">Fee (%)</Label>
+                          <Label className="block text-xs mb-1">Fee (%)</Label>
                           <Input
                             type="number"
                             step="0.1"
@@ -453,24 +444,25 @@ const LiquidityFeePage = () => {
                       </div>
                     </div>
                   </div>
-
-                  {/* Reset Button */}
-                  <Button
-                    onClick={() =>
-                      setRules({
-                        shortHoldThreshold: 7,
-                        shortHoldFee: 2.0,
-                        mediumHoldThreshold: 30,
-                        mediumHoldMinAmount: 50000,
-                        mediumHoldFee: 1.0,
-                        largeAmountThreshold: 1000000,
-                        largeAmountFee: 0.5,
-                      })
-                    }
-                    className="w-full mt-4 py-2 hover:cursor-pointer transition-colors text-sm"
-                  >
-                    รีเซ็ต
-                  </Button>
+                  <div className="w-full flex justify-end items-end">
+                    <Button
+                      onClick={() =>
+                        setRules({
+                          shortHoldThreshold: 7,
+                          shortHoldFee: 2.0,
+                          mediumHoldThreshold: 30,
+                          mediumHoldMinAmount: 50000,
+                          mediumHoldFee: 1.0,
+                          largeAmountThreshold: 1000000,
+                          largeAmountFee: 0.5,
+                        })
+                      }
+                      className="mt-4 py-2 hover:cursor-pointer transition-colors text-sm"
+                    >
+                      <ReplyIcon />
+                      <p>รีเซ็ต</p>
+                    </Button>
+                  </div>
                 </div>
               </div>
 
@@ -479,62 +471,54 @@ const LiquidityFeePage = () => {
                   เรียกเก็บค่าธรรมเนียมเฉพาะคนที่ละเมิดกฎเท่านั้น
                 </p>
               </div>
-
-              {/* Individual Person Cards */}
-              <div className="grid grid-cols-3 gap-4">
-                <PersonCard
-                  person={person1}
-                  result={impact.person1Result}
-                  setPerson={setPerson1}
-                />
-                <PersonCard
-                  person={person2}
-                  result={impact.person2Result}
-                  setPerson={setPerson2}
-                />
-                <PersonCard
-                  person={person3}
-                  result={impact.person3Result}
-                  setPerson={setPerson3}
-                />
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {people.map((person, index) => (
+                  <PersonCard
+                    key={person.id}
+                    person={person}
+                    result={impact.results[index]}
+                  />
+                ))}
               </div>
-
-              {/* Fund Impact Analysis */}
+              <div className="flex justify-center mt-4">
+                <Button
+                  onClick={addPerson}
+                  disabled={people.length >= 10}
+                  className="hover:cursor-pointer"
+                >
+                  เพิ่มผู้ขายคืน
+                </Button>
+              </div>
               <div className="mt-8 rounded-xl p-6">
                 <h2 className="text-xl mb-4">ผลกระทบต่อกองทุน</h2>
-
-                {/* Key Metrics */}
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
                   <div className="flex flex-col items-center justify-center text-center p-4 bg-primary/5 rounded-lg">
-                    <div className="text-2xl ">
+                    <div className="text-2xl">
                       {impact.totalRedemption.toLocaleString()}
                     </div>
                     <div className="text-xs">ยอดขายคืนรวม (บาท)</div>
                   </div>
-
                   <div className="flex flex-col items-center justify-center text-center p-4 bg-primary/5 rounded-lg">
-                    <div className="text-2xl  text-green-600">
+                    <div className="text-2xl text-green-600">
                       +{impact.totalFeesCollected.toLocaleString()}
                     </div>
                     <div className="text-xs">ค่าธรรมเนียมที่เก็บได้ (บาท)</div>
                   </div>
-
                   <div className="flex flex-col items-center justify-center text-center p-4 bg-primary/5 rounded-lg">
-                    <div className="text-2xl  text-red-600">
+                    <div className="text-2xl text-red-600">
                       -{impact.totalFundCosts.toLocaleString()}
                     </div>
                     <div className="text-xs">ต้นทุนการขายสินทรัพย์ (บาท)</div>
                   </div>
-
                   <div
-                    className={`flex flex-col items-center  justify-center text-center p-4 rounded-lg ${
+                    className={`flex flex-col items-center justify-center text-center p-4 rounded-lg ${
                       impact.netFundImpact > 0
                         ? "bg-red-900/10"
                         : "bg-green-900/10"
                     }`}
                   >
                     <div
-                      className={`text-2xl  ${
+                      className={`text-2xl ${
                         impact.netFundImpact > 0
                           ? "text-red-600"
                           : "text-green-600"
@@ -546,8 +530,6 @@ const LiquidityFeePage = () => {
                     <div className="text-xs">ผลกระทบสุทธิ (บาท)</div>
                   </div>
                 </div>
-
-                {/* Detailed Analysis */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-16">
                   <div className="space-y-4">
                     <h3 className="">การวิเคราะห์สภาพคล่อง</h3>
@@ -564,18 +546,6 @@ const LiquidityFeePage = () => {
                           {impact.totalRedemption.toLocaleString()} บาท
                         </span>
                       </div>
-                      {/* <div className="flex justify-between">
-                        <span>Liquidity Ratio:</span>
-                        <span
-                          className={` ${
-                            impact.liquidityRatio >= 1
-                              ? "text-green-600"
-                              : "text-red-600"
-                          }`}
-                        >
-                          {impact.liquidityRatio.toFixed(2)}x
-                        </span>
-                      </div> */}
                       <div className="flex justify-between">
                         <span>ต้องขายสินทรัพย์:</span>
                         <span
@@ -590,7 +560,6 @@ const LiquidityFeePage = () => {
                       </div>
                     </div>
                   </div>
-
                   <div className="space-y-4">
                     <h3 className="">ต้นทุนการซื้อขายจริง</h3>
                     <div className="bg-primary/5 rounded-lg p-4 space-y-2 text-sm">
@@ -617,25 +586,11 @@ const LiquidityFeePage = () => {
                           {impact.totalFundCosts.toLocaleString()} บาท
                         </span>
                       </div>
-                      {/* <div className="flex justify-between">
-                        <span>Coverage Ratio:</span>
-                        <span
-                          className={` ${
-                            impact.costCoverageRatio >= 1
-                              ? "text-green-600"
-                              : "text-red-600"
-                          }`}
-                        >
-                          {impact.costCoverageRatio.toFixed(2)}x
-                        </span>
-                      </div> */}
                     </div>
                   </div>
                 </div>
-
-                {/* Impact Summary */}
-                <div className="mt-6 p-4 rounded-lg ${impact.netFundImpact > 0 ? 'bg-red-50' : 'bg-green-50'}">
-                  <h3 className={` mb-2`}>สรุปผลกระทบ:</h3>
+                <div className={`mt-6 p-4 rounded-lg`}>
+                  <h3 className={`mb-2`}>สรุปผลกระทบ:</h3>
                   <div className="text-sm">
                     {impact.netFundImpact > 0 ? (
                       <>
