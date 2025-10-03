@@ -7,6 +7,11 @@ import { Label } from "@/components/ui/label";
 import { CheckCheck, ReplyIcon } from "lucide-react";
 import Image from "next/image";
 import { useState } from "react";
+import {
+  HoverCard,
+  HoverCardContent,
+  HoverCardTrigger,
+} from "@/components/ui/hover-card";
 
 interface PersonType {
   id: number;
@@ -564,17 +569,31 @@ const LiquidityFeePage = () => {
                     <h3 className="">ต้นทุนการซื้อขายจริง</h3>
                     <div className="bg-primary/5 rounded-lg p-4 space-y-2 text-sm">
                       <div className="flex justify-between">
-                        <span>
-                          Trading Cost ({fundParams.tradingCostRate}%):
-                        </span>
+                        <HoverCard>
+                          <HoverCardTrigger className="hover:cursor-pointer hover:border-b-1 border-b-gray-200 duration-300">
+                            Trading Cost ({fundParams.tradingCostRate}%):
+                          </HoverCardTrigger>
+                          <HoverCardContent className="text-xs ">
+                            Trading Cost = {fundParams.tradingCostRate}% *{" "}
+                            {impact.assetsToSell.toLocaleString()}
+                          </HoverCardContent>
+                        </HoverCard>
+
                         <span className=" text-red-600">
                           {impact.tradingCost.toLocaleString()} บาท
                         </span>
                       </div>
                       <div className="flex justify-between">
-                        <span>
-                          Market Impact ({fundParams.marketImpactRate}%):
-                        </span>
+                        <HoverCard>
+                          <HoverCardTrigger className="hover:cursor-pointer hover:border-b-1 border-b-gray-200 duration-300">
+                            Market Impact ({fundParams.marketImpactRate}%):
+                          </HoverCardTrigger>
+                          <HoverCardContent className="text-xs ">
+                            Market Impact = {fundParams.marketImpactRate}% *{" "}
+                            {impact.assetsToSell.toLocaleString()}
+                          </HoverCardContent>
+                        </HoverCard>
+
                         <span className=" text-red-600">
                           {impact.marketImpact.toLocaleString()} บาท
                         </span>

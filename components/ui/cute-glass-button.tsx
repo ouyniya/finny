@@ -12,6 +12,7 @@ interface CuteGlassButtonProps {
   iconAfter?: ElementType;
   iconAnimation?: string;
   loading?: boolean;
+  className?: string;
 }
 
 const CuteGlassButton = ({
@@ -23,6 +24,7 @@ const CuteGlassButton = ({
   iconAfter: IconAfter,
   iconAnimation = "",
   loading,
+  className
 }: CuteGlassButtonProps) => {
   return (
     <div
@@ -60,7 +62,8 @@ const CuteGlassButton = ({
           <IconBefore className={cn("transition-transform", iconAnimation)} />
         ))}
       <AnimatedGradientText
-        className="text-lg font-medium"
+        className={cn("text-lg font-medium", className)}
+        // className="text-lg font-medium"
         colorFrom={textColorFrom}
         colorTo={textColorTo}
       >

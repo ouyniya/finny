@@ -1,30 +1,39 @@
 import { FormData } from "@/types/retire";
 
+// asset mapping
+export const assetTickers = [
+  { id: "BIL", name: "เงินฝากและตราสารหนี้ระยะสั้น", ticker: "BIL" }, // SPDR Bloomberg 1-3 Month T-Bill ETF (BIL)
+  { id: "IEF", name: "ตราสารหนี้ภาครัฐ", ticker: "IEF" }, // iShares 7-10 Year Treasury Bond ETF (IEF)
+  { id: "LQD", name: "หุ้นกู้", ticker: "LQD" }, // iShares iBoxx $ Investment Grade Corporate Bond ETF (LQD)
+  { id: "SPY", name: "หุ้น", ticker: "SPY" }, // SPDR S&P 500 ETF (SPY)
+  { id: "DBC", name: "การลงทุนทางเลือก", ticker: "DBC" }, // Invesco DB Commodity Index Tracking Fund (DBC)
+];
+
 export const initialMarketDataInputs = [
   {
-    id: "asset-1",
+    id: "BIL",
     name: "เงินฝากและตราสารหนี้ระยะสั้น",
-    expectedReturn: 0.0098,
-    volatility: 0.0017,
+    expectedReturn: 0.0193,
+    volatility: 0.0026,
   },
   {
-    id: "asset-2",
+    id: "IEF",
     name: "ตราสารหนี้ภาครัฐ",
-    expectedReturn: 0.0136,
-    volatility: 0.0098,
+    expectedReturn: 0.0104,
+    volatility: 0.0666,
   },
   {
-    id: "asset-3",
+    id: "LQD",
     name: "หุ้นกู้",
-    expectedReturn: 0.0175,
-    volatility: 0.0104,
+    expectedReturn: 0.0305,
+    volatility: 0.0866,
   },
-  { id: "asset-4", name: "หุ้น", expectedReturn: 0.0459, volatility: 0.1475 },
+  { id: "SPY", name: "หุ้น", expectedReturn: 0.1392, volatility: 0.1808 },
   {
-    id: "asset-5",
+    id: "DBC",
     name: "การลงทุนทางเลือก",
-    expectedReturn: 0.0054,
-    volatility: 0.1453,
+    expectedReturn: 0.0492,
+    volatility: 0.1772,
   },
 ];
 

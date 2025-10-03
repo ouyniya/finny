@@ -1,10 +1,12 @@
-import React, { useState } from "react";
+"use client";
 
-import { ChevronRight, Gem, X } from "lucide-react";
+import React, { useCallback, useEffect, useState } from "react";
+
+import { ChevronRight, Gem, Minus, Plus, X } from "lucide-react";
+import { useCorrelations } from "@/hooks/useCorrelations";
 
 import {
   AssetInput,
-  CorrelationInput,
   FrontierPoint,
   OptimizationResult,
   UserProfile,
@@ -16,12 +18,13 @@ import Header from "@/components/common/Header";
 import { Particles } from "@/components/ui/magicui/particles";
 import { PortfolioDisplay } from "@/app/(main)/(routes)/game/portfolio/PortfolioDisplay";
 import {
-  initialMarketDataInputs,
+  assetTickers,
   INVESTMENT_AMOUNT,
   INVESTMENT_HORIZON,
   MAX_EXPECTED_RETURN,
   MIN_VOLATILITY,
   RISK_FREE_RATE,
+  initialMarketDataInputs,
 } from "@/lib/constants";
 import CuteGlassButton from "@/components/ui/cute-glass-button";
 import { toast } from "react-toastify";
@@ -29,8 +32,66 @@ import WhatIsPortfolioGame from "./WhatIsPortfolioGame";
 import Image from "next/image";
 import { InView } from "@/components/ui/in-view";
 
+interface AssetData {
+  id: string;
+  name: string;
+  expectedReturn: number;
+  volatility: number;
+}
+
+// ฟังก์ชันดึงค่าจาก API ของคุณ
+async function fetchAssetData(dateValue: string): Promise<AssetData[]> {
+  try {
+    const results = await Promise.allSettled(
+      assetTickers.map(async (asset) => {
+        const response = await fetch(
+          `/api/marketdata?index=${asset.ticker}&dateValue=${dateValue}`
+        );
+        if (!response.ok) throw new Error(`API failed for ${asset.ticker}`);
+        const data = await response.json();
+        return {
+          id: asset.id,
+          name: asset.name,
+          expectedReturn: data.expectedReturn,
+          volatility: data.volatility,
+        };
+      })
+    );
+
+    // filter errors & return valid ones
+    return results.filter(isFulfilled).map((r) => r.value);
+  } catch (err) {
+    console.error("fetchAssetData error:", err);
+    return [];
+  }
+}
+
+function isFulfilled<T>(
+  result: PromiseSettledResult<T>
+): result is PromiseFulfilledResult<T> {
+  return result.status === "fulfilled";
+}
+
 // --- Main Component ---
 export default function ThaiPortfolioOptimizer() {
+  const {
+    correlations,
+    corrError,
+    loadCorrelations,
+    updateCorrelation,
+    getCorrelationValue,
+    removeAssetCorrelations,
+  } = useCorrelations();
+
+  const handleLoadClick = () => {
+    const today = new Date().toISOString().split("T")[0];
+    const assetIds = assetTickers.map((a) => a.ticker);
+    loadCorrelations(assetIds, today);
+  };
+
+  const [mktDataLoading, setMktDataLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
   const [showPortfolio, setShowPortfolio] = useState(false);
   const [portfolioResult, setPortfolioResult] =
     useState<OptimizationResult | null>(null);
@@ -45,8 +106,6 @@ export default function ThaiPortfolioOptimizer() {
     initialMarketDataInputs
   );
 
-  const [correlations, setCorrelations] = useState<CorrelationInput[]>([]);
-
   // Default risk-free rate
   const [riskFreeRate, setRiskFreeRate] = useState(RISK_FREE_RATE);
 
@@ -55,6 +114,35 @@ export default function ThaiPortfolioOptimizer() {
     useState<number>(INVESTMENT_AMOUNT);
   const [investmentHorizon, setInvestmentHorizon] =
     useState<number>(INVESTMENT_HORIZON);
+
+  const loadData = useCallback(async () => {
+    setMktDataLoading(true);
+    setError(null);
+
+    try {
+      const today = new Date().toISOString().split("T")[0];
+      const data = await fetchAssetData(today);
+
+      if (data.length === 0) {
+        throw new Error("No market data available");
+      }
+
+      setMarketDataInputs(data);
+    } catch (err) {
+      if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError("Unexpected error occurred");
+      }
+    } finally {
+      setMktDataLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadData();
+    handleLoadClick()
+  }, [loadData]);
 
   const handleAddAsset = () => {
     setMarketDataInputs((prevAssets) => {
@@ -66,16 +154,8 @@ export default function ThaiPortfolioOptimizer() {
       };
 
       // Add new correlations for the new asset with existing assets
-      setCorrelations((prevCorrelations) => {
-        const newCorrelations = [...prevCorrelations];
-        prevAssets.forEach((existingAsset) => {
-          newCorrelations.push({
-            asset1Id: newAsset.id,
-            asset2Id: existingAsset.id,
-            value: 0, // Default correlation
-          });
-        });
-        return newCorrelations;
+      prevAssets.forEach((existingAsset) => {
+        updateCorrelation(newAsset.id, existingAsset.id, 0);
       });
 
       return [...prevAssets, newAsset];
@@ -86,11 +166,8 @@ export default function ThaiPortfolioOptimizer() {
     setMarketDataInputs((prevAssets) =>
       prevAssets.filter((asset) => asset.id !== id)
     );
-    setCorrelations((prevCorrelations) =>
-      prevCorrelations.filter(
-        (corr) => corr.asset1Id !== id && corr.asset2Id !== id
-      )
-    );
+    // ลบ correlations ที่เกี่ยวข้องกับ asset นี้
+    removeAssetCorrelations(id);
   };
 
   const handleAssetInputChange = (
@@ -136,36 +213,8 @@ export default function ThaiPortfolioOptimizer() {
     asset2Id: string,
     value: string
   ) => {
-    setCorrelations((prevCorrelations) => {
-      const existingCorrelationIndex = prevCorrelations.findIndex(
-        (corr) =>
-          (corr.asset1Id === asset1Id && corr.asset2Id === asset2Id) ||
-          (corr.asset1Id === asset2Id && corr.asset2Id === asset1Id)
-      );
-
-      const newValue = parseFloat(value) || 0;
-
-      if (existingCorrelationIndex !== -1) {
-        // Update existing correlation
-        return prevCorrelations.map((corr, index) =>
-          index === existingCorrelationIndex
-            ? { ...corr, value: newValue }
-            : corr
-        );
-      } else {
-        // Add new correlation
-        return [...prevCorrelations, { asset1Id, asset2Id, value: newValue }];
-      }
-    });
-  };
-
-  const getCorrelationValue = (asset1Id: string, asset2Id: string): number => {
-    const correlation = correlations.find(
-      (corr) =>
-        (corr.asset1Id === asset1Id && corr.asset2Id === asset2Id) ||
-        (corr.asset1Id === asset2Id && corr.asset2Id === asset1Id)
-    );
-    return correlation ? correlation.value : 0;
+    const num = parseFloat(value) || 0;
+    updateCorrelation(asset1Id, asset2Id, num);
   };
 
   function GoToTopButton() {
@@ -238,12 +287,6 @@ export default function ThaiPortfolioOptimizer() {
     setPortfolioResult(null);
     setFrontierData(null);
     setUserProfile(null);
-    // Optionally reset all inputs to default or clear them
-    setMarketDataInputs(initialMarketDataInputs);
-    setCorrelations([]);
-    setRiskFreeRate(RISK_FREE_RATE);
-    setInvestmentAmount(INVESTMENT_AMOUNT);
-    setInvestmentHorizon(INVESTMENT_HORIZON);
   };
 
   if (loading) {
@@ -312,117 +355,147 @@ export default function ThaiPortfolioOptimizer() {
 
             {/* Market Data Input */}
             <div className="mb-8 mt-24 rounded-lg">
-              <h2 className="text-lg text-primary mb-8">
-                ข้อมูลสินทรัพย์ (Expected Return & Volatility)
-              </h2>
-              {marketDataInputs.length === 0 ? (
-                <p className="text-red-500">
-                  กรุณาเพิ่มสินทรัพย์อย่างน้อย 1 รายการ
-                </p>
-              ) : (
-                <>
-                  <div className="grid grid-col-1 lg:grid-cols-2 gap-6">
-                    {marketDataInputs.map((asset) => (
-                      <div
-                        key={asset.id}
-                        className="relative grid grid-cols-1 gap-4 items-end p-6 bg-gradient-to-br from-indigo-100/10 to-indigo-500/40 rounded-xl backdrop-blur-sm border border-white/10 shadow-sm text-primary"
-                      >
-                        <div className="w-full flex flex-col gap-2">
-                          <div className="flex items-center">
-                            <Gem className="h-5 w-5 text-indigo-500 mr-2" />
-                            <h1 className="font-semibold">{asset.name}</h1>{" "}
-                            <div className="absolute top-2 right-2">
-                              <button
-                                onClick={() => handleRemoveAsset(asset.id)}
-                                className="flex justify-center items-center h-6 w-6 text-white rounded-full hover:bg-red-500 transition-colors duration-200 hover:cursor-pointer"
-                                aria-label="Remove asset"
-                              >
-                                <X className="h-3 w-3" />
-                              </button>
-                            </div>
-                          </div>
-                          <div className="w-full rounded-lg">
-                            <div className="grid gap-2">
-                              <div className="grid gap-2">
-                                <div className="grid grid-cols-3 items-center gap-4">
-                                  <label
-                                    htmlFor={`asset-name-${asset.id}`}
-                                    className="text-sm"
-                                  >
-                                    ชื่อสินทรัพย์
-                                  </label>
-                                  <input
-                                    type="text"
-                                    id={`asset-name-${asset.id}`}
-                                    value={asset.name}
-                                    onChange={(e) =>
-                                      handleAssetInputChange(
-                                        asset.id,
-                                        "name",
-                                        e.target.value
-                                      )
-                                    }
-                                    placeholder="เช่น หุ้น, ตราสารหนี้"
-                                    className="col-span-2 h-8 px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                                  />
-                                </div>
-                                <div className="grid grid-cols-3 items-center gap-4">
-                                  <label
-                                    htmlFor={`asset-return-${asset.id}`}
-                                    className="text-sm"
-                                  >
-                                    ผลตอบแทนคาดหวัง (%)
-                                  </label>
-                                  <input
-                                    type="number"
-                                    id={`asset-return-${asset.id}`}
-                                    value={(asset.expectedReturn * 100).toFixed(
-                                      2
-                                    )}
-                                    onChange={(e) =>
-                                      handleAssetInputChange(
-                                        asset.id,
-                                        "expectedReturn",
-                                        e.target.value
-                                      )
-                                    }
-                                    step="0.01"
-                                    min="0"
-                                    className="col-span-2 h-8 px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                                  />
-                                </div>
-                                <div className="grid grid-cols-3 items-center gap-4">
-                                  <label
-                                    htmlFor={`asset-volatility-${asset.id}`}
-                                    className="text-sm"
-                                  >
-                                    ความผันผวน (%)
-                                  </label>
+              <div className="grid grid-cols-1 gap-1">
+                <h2 className="flex gap-4 items-center">
+                  <span className="text-lg text-primary">
+                    ข้อมูลสินทรัพย์ (Expected Return & Volatility)
+                  </span>
 
-                                  <input
-                                    type="number"
-                                    id={`asset-volatility-${asset.id}`}
-                                    value={(asset.volatility * 100).toFixed(2)}
-                                    onChange={(e) =>
-                                      handleAssetInputChange(
-                                        asset.id,
-                                        "volatility",
-                                        e.target.value
-                                      )
-                                    }
-                                    step="0.01"
-                                    min="0"
-                                    className="col-span-2 h-8 px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                                  />
-                                </div>
+                  <div className="max-w-max">
+                    <CuteGlassButton
+                      onClick={loadData}
+                      textColorFrom="#a67bf5"
+                      textColorTo="#1ca2e9"
+                      text="โหลดข้อมูลใหม่"
+                      iconAfter={ChevronRight}
+                      iconAnimation=""
+                      className="text-sm"
+                    />
+                  </div>
+                </h2>
+                <p className="text-xs opacity-60 mb-8">หน่วย % ต่อปี</p>
+              </div>
+
+              {mktDataLoading && (
+                <div className="animate-pulse text-gray-500">
+                  Loading market data...
+                </div>
+              )}
+
+              {error && (
+                <div className="text-red-500">
+                  ⚠️ Failed to load: {error}
+                  <button
+                    onClick={loadData}
+                    className="ml-2 px-3 py-1 bg-red-100 rounded hover:bg-red-200"
+                  >
+                    Retry
+                  </button>
+                </div>
+              )}
+
+              {!mktDataLoading && !error && (
+                <div className="grid grid-col-1 lg:grid-cols-2 gap-6">
+                  {marketDataInputs.map((asset) => (
+                    <div
+                      key={asset.id}
+                      className="relative grid grid-cols-1 gap-4 items-end p-6 bg-gradient-to-br from-indigo-100/10 to-indigo-500/40 rounded-xl backdrop-blur-sm border border-white/10 shadow-sm text-primary"
+                    >
+                      <div className="w-full flex flex-col gap-2">
+                        <div className="flex items-center">
+                          <Gem className="h-5 w-5 text-indigo-500 mr-2" />
+                          <h1 className="font-semibold">{asset.name}</h1>{" "}
+                          <div className="absolute top-2 right-2">
+                            <button
+                              onClick={() => handleRemoveAsset(asset.id)}
+                              className="flex justify-center items-center h-6 w-6 text-white rounded-full hover:bg-red-500 transition-colors duration-200 hover:cursor-pointer"
+                              aria-label="Remove asset"
+                            >
+                              <X className="h-3 w-3" />
+                            </button>
+                          </div>
+                        </div>
+                        <div className="w-full rounded-lg">
+                          <div className="grid gap-2">
+                            <div className="grid gap-2">
+                              <div className="grid grid-cols-3 items-center gap-4">
+                                <label
+                                  htmlFor={`asset-name-${asset.id}`}
+                                  className="text-sm"
+                                >
+                                  ชื่อสินทรัพย์
+                                </label>
+                                <input
+                                  type="text"
+                                  id={`asset-name-${asset.id}`}
+                                  value={asset.name}
+                                  onChange={(e) =>
+                                    handleAssetInputChange(
+                                      asset.id,
+                                      "name",
+                                      e.target.value
+                                    )
+                                  }
+                                  placeholder="เช่น หุ้น, ตราสารหนี้"
+                                  className="col-span-2 h-8 px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                                />
+                              </div>
+                              <div className="grid grid-cols-3 items-center gap-4">
+                                <label
+                                  htmlFor={`asset-return-${asset.id}`}
+                                  className="text-sm"
+                                >
+                                  ผลตอบแทนคาดหวัง (%)
+                                </label>
+                                <input
+                                  type="number"
+                                  id={`asset-return-${asset.id}`}
+                                  value={(asset.expectedReturn * 100).toFixed(
+                                    2
+                                  )}
+                                  onChange={(e) =>
+                                    handleAssetInputChange(
+                                      asset.id,
+                                      "expectedReturn",
+                                      e.target.value
+                                    )
+                                  }
+                                  step="0.01"
+                                  min="0"
+                                  className="col-span-2 h-8 px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                                />
+                              </div>
+                              <div className="grid grid-cols-3 items-center gap-4">
+                                <label
+                                  htmlFor={`asset-volatility-${asset.id}`}
+                                  className="text-sm"
+                                >
+                                  ความผันผวน (%)
+                                </label>
+
+                                <input
+                                  type="number"
+                                  id={`asset-volatility-${asset.id}`}
+                                  value={(asset.volatility * 100).toFixed(2)}
+                                  onChange={(e) =>
+                                    handleAssetInputChange(
+                                      asset.id,
+                                      "volatility",
+                                      e.target.value
+                                    )
+                                  }
+                                  step="0.01"
+                                  min="0"
+                                  className="col-span-2 h-8 px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                                />
                               </div>
                             </div>
                           </div>
                         </div>
                       </div>
-                    ))}
-                  </div>
-                </>
+                    </div>
+                  ))}
+                </div>
               )}
 
               {/* button เพิ่มสินทรัพย์  */}
@@ -476,6 +549,19 @@ export default function ThaiPortfolioOptimizer() {
                 <h3 className="text-md font-medium text-primary mb-3">
                   สหสัมพันธ์ระหว่างสินทรัพย์
                 </h3>
+
+                <div className="p-1">
+                  {/* <button
+                    onClick={handleLoadClick}
+                    disabled={corrLoading}
+                    className="px-4 py-2 bg-blue-500 text-white rounded disabled:opacity-50"
+                  >
+                    {corrLoading ? "Loading..." : "Load Correlations"}
+                  </button> */}
+
+                  {corrError && <p className="text-red-500">{corrError}</p>}
+                </div>
+
                 {marketDataInputs.length < 2 && (
                   <p className="text-gray-500 text-sm">
                     เพิ่มสินทรัพย์อย่างน้อย 2 รายการเพื่อตั้งค่าสหสัมพันธ์
@@ -497,7 +583,10 @@ export default function ThaiPortfolioOptimizer() {
                         <input
                           type="number"
                           id={`corr-${asset1.id}-${asset2.id}`}
-                          value={getCorrelationValue(asset1.id, asset2.id)}
+                          value={getCorrelationValue(
+                            asset1.id,
+                            asset2.id
+                          ).toFixed(2)}
                           onChange={(e) =>
                             handleCorrelationChange(
                               asset1.id,
@@ -510,6 +599,15 @@ export default function ThaiPortfolioOptimizer() {
                           max="1"
                           className="mt-1 block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                         />
+                        {getCorrelationValue(asset1.id, asset2.id) >= 0 ? (
+                          <div className="flex justify-center items-center w-6 h-6 bg-emerald-700 p-2 rounded-full">
+                            <Plus className="w-4" />
+                          </div>
+                        ) : (
+                          <div className="flex justify-center items-center w-6 h-6 bg-red-700 p-2 rounded-full">
+                            <Minus className="w-4" />
+                          </div>
+                        )}
                       </div>
                     ))
                   )}
@@ -574,7 +672,6 @@ export default function ThaiPortfolioOptimizer() {
             />
           </div>
         </div>
-
       ) : (
         <PortfolioDisplay
           portfolio={portfolioResult!}
