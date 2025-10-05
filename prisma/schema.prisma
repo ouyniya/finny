@@ -26,58 +26,13 @@ model User {
   wishlists Wishlist[]
 }
 
-model RiskAssessmentResult {
-  id       Int @id @default(autoincrement())
-  minScore Int
-  maxScore Int
-
-  riskLevelMapping  RiskLevelMapping[]
-  recommendPort     RecommendPort[]
-  recommendCriteria RecommendCriteria[]
-}
-
-model RecommendCriteria {
-  id              String @id @default(uuid())
-  userRiskLevelId Int    @map("user_risk_level_id")
-  fundAssetType   String @map("fund_asset_type")
-  percentInvest   String @map("percent_invest")
-
-  riskAssessmentResult RiskAssessmentResult @relation(fields: [userRiskLevelId], references: [id], onDelete: Cascade)
-}
-
-// ผู้ลงทุนระดับความเสี่ยง 6 สามารถลงในกองไหนได้บ้าง
-model RiskLevelMapping {
-  id                   Int                  @id @default(autoincrement())
-  userRiskLevelId      Int                  @map("user_risk_level_id")
-  riskAssessmentResult RiskAssessmentResult @relation(fields: [userRiskLevelId], references: [id], onDelete: Cascade)
-  fundRiskLevelName    String               @map("fund_risk_level_name") // array ["ตราสารทุน", "ตราสารหนี้"]
-}
-
-model RecommendPort {
-  id             String @id @default(uuid())
-  investmentType String @map("investment_type")
-  weight         Float
-
-  userRiskLevelId      Int                  @map("user_risk_level_id")
-  riskAssessmentResult RiskAssessmentResult @relation(fields: [userRiskLevelId], references: [id], onDelete: Cascade)
-}
-
-model RiskAssessmentQuestion {
-  id       String @id @default(uuid())
-  question String
-  option1  String
-  option2  String
-  option3  String
-  option4  String
-}
-
 model FundDetail {
-  id                        Int    @id @default(autoincrement())
+  id                        String @id @default(uuid())
   asOfDate                  String @map("as_of_date")
   regisIdYear1              String @map("regis_id_year1")
   type                      String @map("type")
   projThaiName              String @map("proj_thai_name")
-  projAbbrName              String @map("proj_abbr_name") 
+  projAbbrName              String @map("proj_abbr_name")
   compThaiName              String @map("comp_thai_name")
   isinCode                  String @map("isin_code")
   projType                  String @map("proj_type")
@@ -86,8 +41,8 @@ model FundDetail {
   projRetailType            String @map("proj_retail_type")
   unitMulticlass            String @map("unit_multiclass")
   classList                 String @map("class_list")
-  policyThaiDesc            String @map("policy_thai_desc") @db.VarChar(1000)
-  specGrDesc                String @map("spec_gr_desc") @db.VarChar(500)
+  policyThaiDesc            String @map("policy_thai_desc") @db.VarChar(200)
+  specGrDesc                String @map("spec_gr_desc") @db.VarChar(200)
   mainFeederFund            String @map("main_feeder_fund")
   feederCountry             String @map("feeder_country")
   mainFeederFundUcits       String @map("main_feeder_fund_ucits")
@@ -96,17 +51,17 @@ model FundDetail {
   riskFlag                  String @map("risk_flag")
   globalExposureLimitMethod String @map("global_exposure_limit_method")
   noteFlag                  String @map("note_flag")
-  policySpecDesc            String @map("policyspec_desc") @db.VarChar(1000)
+  policySpecDesc            String @map("policyspec_desc") @db.VarChar(200)
   currentRmfPvdType         String @map("current_rmf_pvd_type")
   managementStyleTh         String @map("management_style_th")
   fundCompare               String @map("fund_compare")
   mutualInvType             String @map("mutual_inv_type")
   investCountryFlagEng      String @map("invest_country_flag_eng")
-  redempPeriodEng           String @map("redemp_period_eng")
+  redempPeriodEng           String @map("redemp_period_eng") @db.VarChar(200)
   redempPeriodOth           String @map("redemp_period_oth") @db.VarChar(200)
   projTermTh                String @map("proj_term_th")
   trackingError             String @map("tracking_error")
-  benchmarkDescTh           String  @map("benchmark_desc_th") @db.VarChar(1000)
+  benchmarkDescTh           String @map("benchmark_desc_th") @db.VarChar(200)
   benchmarkRatio            String @map("benchmark_ratio")
   yieldPaying               String @map("yield_paying")
   dividendPolicy            String @map("dividend_policy")
@@ -130,7 +85,7 @@ model Wishlist {
   updatedAt      DateTime @updatedAt @map("updated_at")
 
   userId       String     @map("user_id")
-  fundDetailId Int        @map("fund_detail_id")
+  fundDetailId String     @map("fund_detail_id")
   user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
   fundDetail   FundDetail @relation(fields: [fundDetailId], references: [id], onDelete: Cascade)
 }
